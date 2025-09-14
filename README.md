@@ -1,6 +1,6 @@
 # Architecture of a Commonbase
 
-**Want to just run a Commonbase of your own? Get started with [Commonbase Next](https://github.com/your-commonbase/commonbase/tree/main/commonbase-next)**
+**Want to just run a Commonbase of your own? Get started with [Commonbase Next](https://github.com/your-commonbase/commonbase/tree/main/commonbase-next/README.md)**
 
 <img width="3308" height="3528" alt="screencapture-localhost-3000-2025-09-14-11_25_58" src="https://github.com/user-attachments/assets/669b015e-a33c-40d5-9fcf-01a0c32ea4d6" />
 
