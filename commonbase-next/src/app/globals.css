@@ -117,6 +117,66 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-black;
+    font-family: system-ui, sans-serif;
+    font-weight: 600;
   }
+  
+  /* Neobrutalism Global Styles */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-black;
+    font-weight: 800;
+  }
+  
+  /* High contrast focus states */
+  *:focus-visible {
+    @apply outline-4 outline-black outline-offset-2;
+  }
+}
+
+@layer components {
+  /* Neobrutalism Button Base */
+  .neo-btn {
+    @apply font-bold px-6 py-3 border-3 border-black transition-all duration-150 ease-out;
+    @apply hover:translate-x-1 hover:translate-y-1;
+    @apply active:translate-x-1 active:translate-y-1;
+    @apply focus:outline-4 focus:outline-black focus:outline-offset-2;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+  
+  .neo-btn:hover {
+    box-shadow: 2px 2px 0px 0px #000000;
+  }
+  
+  .neo-btn:active {
+    box-shadow: none;
+  }
+  
+  /* Neobrutalism Card Base */
+  .neo-card {
+    @apply border-3 border-black bg-white p-6 transition-all duration-200;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+  
+  .neo-card:hover {
+    @apply -translate-x-1 -translate-y-1;
+    box-shadow: 8px 8px 0px 0px #000000;
+  }
+  
+  /* Neobrutalism Input Base */
+  .neo-input {
+    @apply border-3 border-black px-4 py-3 font-semibold;
+    @apply focus:outline-4 focus:outline-black focus:outline-offset-2;
+    @apply bg-white text-black;
+    box-shadow: 4px 4px 0px 0px #000000;
+  }
+  
+  /* Color variants */
+  .neo-violet { background-color: #A8A6FF; }
+  .neo-pink { background-color: #FFA6F6; }
+  .neo-red { background-color: #FF9F9F; }
+  .neo-orange { background-color: #FFC29F; }
+  .neo-yellow { background-color: #FFF066; }
+  .neo-lime { background-color: #B8FF9F; }
+  .neo-cyan { background-color: #A6FAFF; }
 }

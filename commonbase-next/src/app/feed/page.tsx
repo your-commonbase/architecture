@@ -21,7 +21,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchRandomEntries = async (count = 2) => {
+  const fetchRandomEntries = useCallback(async (count = 10) => {
     if (loading) return;
     
     setLoading(true);
@@ -43,8 +43,14 @@ export default function FeedPage() {
           return;
         }
         
+        // Use functional state update to prevent duplicates
+        setEntries(prev => {
+          const existingIds = new Set(prev.map(e => e.id));
+          const uniqueNewEntries = newEntries.filter((entry: Entry) => !existingIds.has(entry.id));
+          return [...prev, ...uniqueNewEntries];
+        });
+        
         const newIds = newEntries.map((entry: Entry) => entry.id);
-        setEntries(prev => [...prev, ...newEntries]);
         setExcludedIds(prev => [...prev, ...newIds]);
       }
     } catch (error) {
@@ -52,7 +58,7 @@ export default function FeedPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loading, excludedIds]);
 
   useEffect(() => {
     fetchRandomEntries();
@@ -71,7 +77,7 @@ export default function FeedPage() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [loading, hasMore]);
+  }, [loading, hasMore, fetchRandomEntries]);
 
   const handleAddToCart = (entry: Entry) => {
     addToCart({
@@ -105,43 +111,44 @@ export default function FeedPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-4 sm:py-8 max-w-4xl px-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Feed</h1>
-          <p className="text-gray-600">Discover random entries from your commonbase</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-black">📖 Feed</h1>
+          <p className="text-sm sm:text-base text-black font-semibold">Discover random entries from your commonbase</p>
         </div>
-        <Button onClick={handleRefresh} variant="outline">
-          Refresh Feed
+        <Button onClick={handleRefresh} variant="accent" className="w-full sm:w-auto">
+          🔄 Refresh Feed
         </Button>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {entries.map((entry) => (
-          <Card key={entry.id} className="hover:shadow-lg transition-shadow">
+          <Card key={entry.id} className="neo-lime hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_0px_#000000] transition-all">
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center space-x-2">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-3 sm:space-y-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center px-3 py-1 border-2 border-black text-xs font-bold bg-white text-black">
                       {entry.metadata?.type || 'text'}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-black font-semibold">
                       {formatDate(entry.created)}
                     </span>
                   </div>
                   
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="pink"
                       onClick={() => handleAddToCart(entry)}
                       disabled={isInCart(entry.id)}
+                      className="w-full sm:w-auto"
                     >
-                      {isInCart(entry.id) ? 'In Cart' : 'Add to Cart'}
+                      {isInCart(entry.id) ? '✓ In Cart' : '📦 Add to Cart'}
                     </Button>
-                    <Button size="sm" asChild>
-                      <Link href={`/entry/${entry.id}`}>View</Link>
+                    <Button size="sm" variant="secondary" asChild className="w-full sm:w-auto">
+                      <Link href={`/entry/${entry.id}`}>👁️ View</Link>
                     </Button>
                   </div>
                 </div>
@@ -210,36 +217,41 @@ export default function FeedPage() {
         <div className="text-center py-8">
           <div className="inline-flex items-center space-x-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-            <span className="text-gray-600">Loading more entries...</span>
+            <span className="text-black font-semibold">Loading more entries...</span>
           </div>
         </div>
       )}
 
       {!hasMore && entries.length > 0 && (
         <div className="text-center py-8">
-          <div className="text-gray-500">
-            You've reached the end! You've seen all available entries.
+          <div className="neo-card neo-cyan p-6">
+            <div className="text-black font-bold text-lg mb-2">
+              🎉 You've reached the end!
+            </div>
+            <div className="text-black font-semibold">
+              You've seen all available entries.
+            </div>
+            <Button 
+              onClick={handleRefresh} 
+              variant="orange" 
+              className="mt-4"
+            >
+              🔄 Start Over
+            </Button>
           </div>
-          <Button 
-            onClick={handleRefresh} 
-            variant="outline" 
-            className="mt-4"
-          >
-            Start Over
-          </Button>
         </div>
       )}
 
       {entries.length === 0 && !loading && (
-        <Card>
+        <Card className="neo-red">
           <CardContent className="text-center py-12">
-            <div className="text-gray-500">
-              <div className="text-lg mb-2">No entries found</div>
-              <div className="text-sm">
+            <div className="text-black">
+              <div className="text-2xl font-black mb-4">🚨 No entries found</div>
+              <div className="text-base font-semibold mb-6">
                 Add some entries to your commonbase to see them in the feed.
               </div>
-              <Button asChild className="mt-4">
-                <Link href="/add">Add Your First Entry</Link>
+              <Button asChild variant="accent">
+                <Link href="/add">✨ Add Your First Entry</Link>
               </Button>
             </div>
           </CardContent>

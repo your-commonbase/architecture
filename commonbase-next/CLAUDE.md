@@ -55,7 +55,7 @@ npm run db:studio    # Open Drizzle Studio
 - `public/assets/` - User-uploaded images and static assets
 
 ### API Endpoints (Implemented)
-- `POST /api/add` - Create new entries with embedding generation
+- `POST /api/add` - Create new entries with embedding generation (supports optional `embedding` and `id` parameters)
 - `POST /api/addImage` - Image upload and AI transcription
 - `POST /api/search` - Semantic and full-text search with highlighting
 - `POST /api/random` - Fetch random entries for feed
@@ -87,6 +87,99 @@ npm run db:studio    # Open Drizzle Studio
 - ESLint configured with Next.js recommended settings
 - Tailwind CSS 4.0 with inline theme configuration
 - Dark/light mode support via CSS custom properties
+
+## API Reference
+
+### POST /api/add
+
+Create a new entry with optional pre-computed embedding.
+
+**Request Body:**
+```json
+{
+  "data": "Your text content (required)",
+  "metadata": {
+    "type": "text",
+    "title": "Optional title",
+    "source": "Optional source URL"
+  },
+  "link": "optional-parent-entry-id",
+  "embedding": [0.1, -0.2, 0.3, ...], // Optional: 1536-dimensional vector
+  "id": "550e8400-e29b-41d4-a716-446655440000" // Optional: UUID
+}
+```
+
+**Parameters:**
+- `data` (string, required) - The text content to store
+- `metadata` (object, optional) - Arbitrary metadata object
+- `link` (string, optional) - Parent entry ID for creating backlinks
+- `embedding` (array, optional) - Pre-computed 1536-dimensional embedding vector
+- `id` (string, optional) - Custom UUID for the entry (must be valid UUID format)
+
+**Behavior:**
+- If `id` is provided and is a valid UUID, it will be used as the entry ID
+- If `id` is invalid, already exists, or not provided, a new UUID will be generated
+- If `embedding` is provided and is a valid 1536-dimensional array, it will be used directly
+- If `embedding` is invalid or not provided, a new embedding will be generated using OpenAI
+- The entry will be created and the embedding stored for semantic search
+- If `link` is provided, bidirectional references will be created
+
+**Error Responses:**
+- `400` - Invalid UUID format for id parameter
+- `409` - Entry with this ID already exists
+- `403` - Demo mode enabled (if `DISABLE_ADD=true`)
+
+**Example Usage:**
+
+Regular usage (generates embedding):
+```bash
+curl -X POST http://localhost:3000/api/add \
+  -H "Content-Type: application/json" \
+  -d '{"data": "This is my note about AI", "metadata": {"type": "note"}}'
+```
+
+With pre-computed embedding (skips OpenAI call):
+```bash
+curl -X POST http://localhost:3000/api/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": "This is my note about AI",
+    "metadata": {"type": "note"},
+    "embedding": [0.1, -0.2, 0.3, /* ... 1533 more values ... */]
+  }'
+```
+
+With custom ID (useful for migrations):
+```bash
+curl -X POST http://localhost:3000/api/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": "This is my note about AI",
+    "metadata": {"type": "note"},
+    "id": "550e8400-e29b-41d4-a716-446655440000"
+  }'
+```
+
+Full control (custom ID + embedding):
+```bash
+curl -X POST http://localhost:3000/api/add \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": "This is my note about AI",
+    "metadata": {"type": "note", "imported_from": "legacy_system"},
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "embedding": [0.1, -0.2, 0.3, /* ... 1533 more values ... */]
+  }'
+```
+
+**Use Cases:**
+- **Bulk imports**: Pre-compute embeddings in batches to avoid OpenAI rate limits
+- **Custom embeddings**: Use different embedding models (e.g., local models, specialized embeddings)
+- **Migration**: Import data from other systems with existing embeddings and preserve original IDs
+- **Offline processing**: Generate embeddings offline and upload later
+- **Data synchronization**: Maintain consistent IDs across multiple instances
+- **Testing**: Create entries with predictable IDs for integration tests
+- **External integrations**: Reference entries by known IDs from external systems
 
 ## Development Context
 

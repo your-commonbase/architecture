@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,13 +8,73 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
+import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
+import { DemoModeCallout } from '@/components/demo-mode-callout';
 
 export default function AddPage() {
   const [textData, setTextData] = useState('');
   const [metadata, setMetadata] = useState({ title: '', source: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetchingTitle, setFetchingTitle] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const router = useRouter();
+
+  // Check demo mode on mount
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await fetch('/api/demo-mode');
+        const data = await response.json();
+        setIsDemoMode(data.isDemoMode);
+      } catch (error) {
+        console.error('Failed to check demo mode:', error);
+      }
+    };
+    checkDemoMode();
+  }, []);
+
+  // Auto-detect URLs and fetch titles
+  useEffect(() => {
+    const detectAndFetchUrl = async () => {
+      if (!textData.trim()) return;
+      
+      const urls = extractUrls(textData);
+      if (urls.length > 0 && !metadata.title && !metadata.source) {
+        const firstUrl = urls[0];
+        setFetchingTitle(true);
+        
+        try {
+          const title = await fetchUrlTitle(firstUrl);
+          if (title) {
+            setMetadata(prev => ({
+              ...prev,
+              title,
+              source: firstUrl
+            }));
+            // Replace the URL in the text data with the title
+            setTextData(prev => prev.replace(firstUrl, title));
+          } else {
+            setMetadata(prev => ({
+              ...prev,
+              source: firstUrl
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch URL title:', error);
+          setMetadata(prev => ({
+            ...prev,
+            source: firstUrl
+          }));
+        } finally {
+          setFetchingTitle(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(detectAndFetchUrl, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [textData, metadata.title, metadata.source]);
 
   const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,7 +149,9 @@ export default function AddPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
+    <div className="container mx-auto py-4 sm:py-8 max-w-4xl px-4">
+      {isDemoMode && <DemoModeCallout />}
+      
       <Card>
         <CardHeader>
           <CardTitle>Add New Entry</CardTitle>
@@ -107,23 +169,28 @@ export default function AddPage() {
                   <Label htmlFor="textData">Content *</Label>
                   <Textarea
                     id="textData"
-                    placeholder="Enter your text content here..."
+                    placeholder={isDemoMode ? "Adding disabled in demo mode" : "Enter your text content here..."}
                     value={textData}
                     onChange={(e) => setTextData(e.target.value)}
                     className="min-h-40 resize-y"
+                    disabled={isDemoMode}
                     required
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title (optional)</Label>
+                    <Label htmlFor="title">
+                      Title (optional)
+                      {fetchingTitle && <span className="text-blue-600 ml-2">🔄 Fetching...</span>}
+                    </Label>
                     <Input
                       id="title"
                       type="text"
-                      placeholder="Enter a title..."
+                      placeholder={isDemoMode ? "Adding disabled" : fetchingTitle ? "Fetching title..." : "Enter a title..."}
                       value={metadata.title}
                       onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
+                      disabled={isDemoMode || fetchingTitle}
                     />
                   </div>
                   
@@ -132,14 +199,15 @@ export default function AddPage() {
                     <Input
                       id="source"
                       type="url"
-                      placeholder="https://example.com"
+                      placeholder={isDemoMode ? "Adding disabled" : "https://example.com"}
                       value={metadata.source}
                       onChange={(e) => setMetadata({ ...metadata, source: e.target.value })}
+                      disabled={isDemoMode}
                     />
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button 
                     type="button" 
                     variant="outline"
@@ -147,14 +215,16 @@ export default function AddPage() {
                       setTextData('');
                       setMetadata({ title: '', source: '' });
                     }}
+                    className="w-full sm:w-auto"
                   >
                     Clear
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={loading || !textData.trim()}
+                    disabled={loading || !textData.trim() || isDemoMode}
+                    className="w-full sm:w-auto"
                   >
-                    {loading ? 'Adding...' : 'Add Text Entry'}
+                    {isDemoMode ? 'Adding Disabled' : loading ? 'Adding...' : 'Add Text Entry'}
                   </Button>
                 </div>
               </form>
@@ -169,6 +239,7 @@ export default function AddPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
+                    disabled={isDemoMode}
                     required
                   />
                   {selectedFile && (
@@ -198,7 +269,7 @@ export default function AddPage() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button 
                     type="button" 
                     variant="outline"
@@ -207,14 +278,16 @@ export default function AddPage() {
                       const fileInput = document.getElementById('imageFile') as HTMLInputElement;
                       if (fileInput) fileInput.value = '';
                     }}
+                    className="w-full sm:w-auto"
                   >
                     Clear
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={loading || !selectedFile}
+                    disabled={loading || !selectedFile || isDemoMode}
+                    className="w-full sm:w-auto"
                   >
-                    {loading ? 'Processing Image...' : 'Add Image Entry'}
+                    {isDemoMode ? 'Adding Disabled' : loading ? 'Processing Image...' : 'Add Image Entry'}
                   </Button>
                 </div>
               </form>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,9 @@ import { addToCart, isInCart } from '@/lib/cart';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
+import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
+import { DemoModeCallout } from '@/components/demo-mode-callout';
+import { SimilarityScatterPlot } from '@/components/similarity-scatter-plot';
 
 interface Entry {
   id: string;
@@ -37,12 +40,71 @@ export default function EntryPage() {
   const [commentText, setCommentText] = useState('');
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [addingComment, setAddingComment] = useState(false);
+  const [commentMetadata, setCommentMetadata] = useState<{title?: string; source?: string}>({});
+  const [fetchingCommentTitle, setFetchingCommentTitle] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchEntry();
     }
   }, [id]);
+
+  // Check demo mode on mount
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await fetch('/api/demo-mode');
+        const data = await response.json();
+        setIsDemoMode(data.isDemoMode);
+      } catch (error) {
+        console.error('Failed to check demo mode:', error);
+      }
+    };
+    checkDemoMode();
+  }, []);
+
+  // Auto-detect URLs in comment text and fetch titles
+  useEffect(() => {
+    const detectAndFetchUrl = async () => {
+      if (!commentText.trim()) {
+        setCommentMetadata({});
+        return;
+      }
+      
+      const urls = extractUrls(commentText);
+      if (urls.length > 0 && !commentMetadata.title && !commentMetadata.source) {
+        const firstUrl = urls[0];
+        setFetchingCommentTitle(true);
+        
+        try {
+          const title = await fetchUrlTitle(firstUrl);
+          if (title) {
+            setCommentMetadata({
+              title,
+              source: firstUrl
+            });
+            // Replace the URL in the comment text with the title
+            setCommentText(prev => prev.replace(firstUrl, title));
+          } else {
+            setCommentMetadata({
+              source: firstUrl
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch URL title for comment:', error);
+          setCommentMetadata({
+            source: firstUrl
+          });
+        } finally {
+          setFetchingCommentTitle(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(detectAndFetchUrl, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [commentText, commentMetadata.title, commentMetadata.source]);
 
   const fetchEntry = async () => {
     try {
@@ -134,7 +196,9 @@ export default function EntryPage() {
       });
       
       if (response.ok) {
-        const allLinked = await response.json();
+        const result = await response.json();
+        // Handle both array response and object with entries property
+        const allLinked = Array.isArray(result) ? result : result.entries || [];
         // Filter for comments (either type=comment or isComment=true)
         const commentData = allLinked.filter((entry: any) => 
           entry.metadata?.type === 'comment' || entry.metadata?.isComment === true
@@ -280,8 +344,8 @@ export default function EntryPage() {
             metadata: {
               type: 'comment',
               link: id,
-              title: entry?.metadata?.title,
-              source: entry?.metadata?.source,
+              title: commentMetadata.title || entry?.metadata?.title,
+              source: commentMetadata.source || entry?.metadata?.source,
               backlinks: [id]
             },
             link: id
@@ -290,6 +354,7 @@ export default function EntryPage() {
         
         if (response.ok) {
           setCommentText('');
+          setCommentMetadata({});
           fetchComments();
           fetchEntry(); // Refresh to show updated backlinks
         }
@@ -319,13 +384,19 @@ export default function EntryPage() {
 
   const isImage = entry.metadata?.type === 'image';
 
+  const truncateText = (text: string, maxLength: number = 100) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-4">
+      {isDemoMode && <DemoModeCallout />}
+      
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
             <CardTitle>Entry Details</CardTitle>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2 sm:space-x-2">
               <Button
                 onClick={handleAddToCart}
                 disabled={isInCart(entry.id)}
@@ -358,7 +429,7 @@ export default function EntryPage() {
                         {searchResults.map((result: any) => (
                           <div key={result.id} className="flex items-center justify-between p-2 border rounded">
                             <div className="flex-1">
-                              <div className="text-sm">{result.data.substring(0, 100)}...</div>
+                              <div className="text-sm">{truncateText(result.data, 100)}</div>
                               <div className="text-xs text-gray-500">
                                 Similarity: {(result.similarity * 100).toFixed(1)}%
                               </div>
@@ -378,20 +449,30 @@ export default function EntryPage() {
               </Dialog>
               
               {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-                  Edit
+                <Button 
+                  onClick={() => setIsEditing(true)} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isDemoMode}
+                >
+                  {isDemoMode ? 'Edit Disabled' : 'Edit'}
                 </Button>
               ) : (
                 <div className="flex space-x-2">
-                  <Button onClick={handleSave} size="sm">Save</Button>
+                  <Button onClick={handleSave} size="sm" disabled={isDemoMode}>Save</Button>
                   <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">
                     Cancel
                   </Button>
                 </div>
               )}
               
-              <Button onClick={handleDelete} variant="destructive" size="sm">
-                Delete
+              <Button 
+                onClick={handleDelete} 
+                variant="destructive" 
+                size="sm"
+                disabled={isDemoMode}
+              >
+                {isDemoMode ? 'Delete Disabled' : 'Delete'}
               </Button>
             </div>
           </div>
@@ -440,6 +521,8 @@ export default function EntryPage() {
                 value={editData}
                 onChange={(e) => setEditData(e.target.value)}
                 className="min-h-32"
+                disabled={isDemoMode}
+                placeholder={isDemoMode ? "Editing disabled in demo mode" : ""}
               />
             ) : (
               <div className="prose max-w-none">
@@ -464,7 +547,7 @@ export default function EntryPage() {
             <CardTitle>Related Entries</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {links.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-2">Links</h3>
@@ -483,7 +566,7 @@ export default function EntryPage() {
                           </div>
                         )}
                         <Link href={`/entry/${link.id}`} className="text-blue-600 hover:underline">
-                          {link.data.substring(0, 100)}...
+                          {truncateText(link.data, 100)}
                         </Link>
                       </div>
                     ))}
@@ -509,7 +592,7 @@ export default function EntryPage() {
                           </div>
                         )}
                         <Link href={`/entry/${backlink.id}`} className="text-blue-600 hover:underline">
-                          {backlink.data.substring(0, 100)}...
+                          {truncateText(backlink.data, 100)}
                         </Link>
                       </div>
                     ))}
@@ -535,7 +618,7 @@ export default function EntryPage() {
                           </div>
                         )}
                         <Link href={`/entry/${neighbor.id}`} className="text-blue-600 hover:underline">
-                          {neighbor.data.substring(0, 100)}...
+                          {truncateText(neighbor.data, 100)}
                         </Link>
                         <div className="text-xs text-gray-500 mt-1">
                           Similarity: {(neighbor.similarity * 100).toFixed(1)}%
@@ -550,6 +633,15 @@ export default function EntryPage() {
         </Card>
       )}
 
+      {/* Similarity Scatter Plot */}
+      <SimilarityScatterPlot
+        entryId={id}
+        mainEntry={{
+          id: entry.id,
+          data: entry.data
+        }}
+      />
+
       <Card>
         <CardHeader>
           <CardTitle>Comments</CardTitle>
@@ -557,12 +649,25 @@ export default function EntryPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-3">
-              <Textarea
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="min-h-20"
-              />
+              <div className="space-y-2">
+                <Textarea
+                  placeholder={isDemoMode ? "Comments disabled in demo mode" : fetchingCommentTitle ? "Add a comment... (fetching URL title)" : "Add a comment..."}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="min-h-20"
+                  disabled={isDemoMode}
+                />
+                {fetchingCommentTitle && (
+                  <div className="text-sm text-blue-600">
+                    🔄 Fetching URL title...
+                  </div>
+                )}
+                {commentMetadata.title && (
+                  <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+                    📄 Found: {commentMetadata.title}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="file"
@@ -576,8 +681,9 @@ export default function EntryPage() {
                   size="sm" 
                   type="button"
                   onClick={() => document.getElementById('comment-image')?.click()}
+                  disabled={isDemoMode}
                 >
-                  📷 Add Image
+                  📷 {isDemoMode ? 'Disabled' : 'Add Image'}
                 </Button>
                 {commentFile && (
                   <div className="flex items-center space-x-2">
@@ -592,10 +698,10 @@ export default function EntryPage() {
                 )}
                 <Button 
                   onClick={handleAddComment}
-                  disabled={addingComment || (!commentText.trim() && !commentFile)}
+                  disabled={isDemoMode || addingComment || (!commentText.trim() && !commentFile)}
                   size="sm"
                 >
-                  {addingComment ? 'Adding...' : 'Add Comment'}
+                  {isDemoMode ? 'Comments Disabled' : addingComment ? 'Adding...' : 'Add Comment'}
                 </Button>
               </div>
             </div>

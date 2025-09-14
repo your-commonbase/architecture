@@ -13,6 +13,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { addToCart, isInCart } from '@/lib/cart';
+import { DemoModeCallout } from '@/components/demo-mode-callout';
 import Link from 'next/link';
 
 interface Entry {
@@ -29,10 +30,25 @@ export default function LedgerPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     fetchEntries();
   }, [page]);
+
+  // Check demo mode on mount
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await fetch('/api/demo-mode');
+        const data = await response.json();
+        setIsDemoMode(data.isDemoMode);
+      } catch (error) {
+        console.error('Failed to check demo mode:', error);
+      }
+    };
+    checkDemoMode();
+  }, []);
 
   const fetchEntries = async () => {
     try {
@@ -112,86 +128,158 @@ export default function LedgerPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-4">
+      {isDemoMode && <DemoModeCallout />}
+      
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>Ledger</CardTitle>
-            <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+            <CardTitle className="text-2xl sm:text-3xl">Ledger</CardTitle>
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               {selectedIds.length > 0 && (
-                <Button onClick={handleDelete} variant="destructive" size="sm">
-                  Delete Selected ({selectedIds.length})
+                <Button 
+                  onClick={handleDelete} 
+                  variant="destructive" 
+                  size="sm" 
+                  className="w-full sm:w-auto"
+                  disabled={isDemoMode}
+                >
+                  {isDemoMode ? 'Delete Disabled' : `Delete Selected (${selectedIds.length})`}
                 </Button>
               )}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Checkbox
-                    checked={selectedIds.length === entries.length && entries.length > 0}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedIds.includes(entry.id)}
-                      onCheckedChange={() => handleSelectEntry(entry.id)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Link 
-                      href={`/entry/${entry.id}`}
-                      className="hover:underline cursor-pointer"
-                    >
-                      {truncateText(entry.data)}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                      {entry.metadata?.type || 'text'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(entry.created).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
+          {/* Mobile card layout */}
+          <div className="block lg:hidden space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  checked={selectedIds.length === entries.length && entries.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <span className="text-sm font-medium">Select All</span>
+              </div>
+            </div>
+            
+            {entries.map((entry) => (
+              <Card key={entry.id}>
+                <CardContent className="pt-4">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          checked={selectedIds.includes(entry.id)}
+                          onCheckedChange={() => handleSelectEntry(entry.id)}
+                        />
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          {entry.metadata?.type || 'text'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(entry.created).toLocaleDateString()}
+                      </span>
+                    </div>
+                    
+                    <div>
+                      <Link 
+                        href={`/entry/${entry.id}`}
+                        className="hover:underline cursor-pointer text-sm"
+                      >
+                        {truncateText(entry.data, 150)}
+                      </Link>
+                    </div>
+                    
+                    <div className="flex flex-col space-y-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleAddToCart(entry)}
                         disabled={isInCart(entry.id)}
+                        className="w-full"
                       >
                         {isInCart(entry.id) ? 'In Cart' : 'Add to Cart'}
                       </Button>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/entry/${entry.id}`}>View</Link>
+                      <Button size="sm" variant="outline" asChild className="w-full">
+                        <Link href={`/entry/${entry.id}`}>View Details</Link>
                       </Button>
                     </div>
-                  </TableCell>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* Desktop table layout */}
+          <div className="hidden lg:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={selectedIds.length === entries.length && entries.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.includes(entry.id)}
+                        onCheckedChange={() => handleSelectEntry(entry.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Link 
+                        href={`/entry/${entry.id}`}
+                        className="hover:underline cursor-pointer"
+                      >
+                        {truncateText(entry.data)}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {entry.metadata?.type || 'text'}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(entry.created).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAddToCart(entry)}
+                          disabled={isInCart(entry.id)}
+                        >
+                          {isInCart(entry.id) ? 'In Cart' : 'Add to Cart'}
+                        </Button>
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/entry/${entry.id}`}>View</Link>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
           
           {hasMore && (
             <div className="mt-4 text-center">
               <Button 
                 onClick={() => setPage(prev => prev + 1)}
                 disabled={loading}
+                className="w-full sm:w-auto"
               >
                 {loading ? 'Loading...' : 'Load More'}
               </Button>

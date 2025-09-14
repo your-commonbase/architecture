@@ -15,11 +15,17 @@ export async function POST(request: NextRequest) {
 
     const results: any[] = [];
 
-    // Semantic search
+    // Semantic search with timeout
     if (types.semantic) {
       try {
-        const queryEmbedding = await generateEmbedding(query);
-        const { limit = 10, threshold = 0.7 } = types.semantic.options || {};
+        // Set a timeout for embedding generation to prevent hanging
+        const embeddingPromise = generateEmbedding(query);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Embedding generation timeout')), 8000)
+        );
+        
+        const queryEmbedding = await Promise.race([embeddingPromise, timeoutPromise]) as number[];
+        const { limit = 10, threshold = 0.5 } = types.semantic.options || {};
         
         // Format the embedding as a PostgreSQL vector string
         const vectorString = `[${queryEmbedding.join(',')}]`;
@@ -48,6 +54,7 @@ export async function POST(request: NextRequest) {
         );
       } catch (error) {
         console.error('Semantic search error:', error);
+        // Continue with other search types even if semantic search fails
       }
     }
 

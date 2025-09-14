@@ -23,11 +23,13 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState<'both' | 'semantic' | 'fulltext'>('both');
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
     
     setLoading(true);
+    setHasSearched(true);
     try {
       const searchTypes: any = {};
       
@@ -81,32 +83,42 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-4">
       <Card>
         <CardHeader>
           <CardTitle>Search</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <Input
                 type="text"
                 placeholder="Enter your search query..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  if (hasSearched && e.target.value.trim() !== query.trim()) {
+                    setHasSearched(false);
+                  }
+                }}
                 onKeyPress={handleKeyPress}
                 className="flex-1"
               />
-              <Button onClick={handleSearch} disabled={loading || !query.trim()}>
+              <Button 
+                onClick={handleSearch} 
+                disabled={loading || !query.trim()}
+                className="w-full sm:w-auto"
+              >
                 {loading ? 'Searching...' : 'Search'}
               </Button>
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2 sm:space-x-2">
               <Button
                 variant={searchMode === 'both' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSearchMode('both')}
+                className="flex-1 sm:flex-none"
               >
                 Both
               </Button>
@@ -114,6 +126,7 @@ export default function SearchPage() {
                 variant={searchMode === 'semantic' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSearchMode('semantic')}
+                className="flex-1 sm:flex-none"
               >
                 Semantic
               </Button>
@@ -121,6 +134,7 @@ export default function SearchPage() {
                 variant={searchMode === 'fulltext' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSearchMode('fulltext')}
+                className="flex-1 sm:flex-none"
               >
                 Full-text
               </Button>
@@ -217,7 +231,7 @@ export default function SearchPage() {
         </div>
       )}
       
-      {results.length === 0 && query && !loading && (
+      {results.length === 0 && query && !loading && hasSearched && (
         <Card>
           <CardContent className="text-center py-8">
             <div className="text-gray-500">

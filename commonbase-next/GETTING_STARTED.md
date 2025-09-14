@@ -37,14 +37,17 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 ## Step 3: Environment Configuration
 
-Your `.env.local` file is already configured:
+Your `.env.local` file is required to run the application. Create it in the root of the project with the following content:
+
 ```
 DATABASE_URL=postgresql://localhost:5432/commonbase
+DATABASE_NAME=commonbase
 OPENAI_API_KEY=sk-proj-[your-key]
 EMBEDDING_DIMENSIONS=1536
+DISABLE_ADD=false
 ```
 
-✅ **This step is complete** - your OpenAI API key is already set.
+Make sure to replace `[your-key]` with your actual OpenAI API key.
 
 ## Step 4: Install Dependencies
 

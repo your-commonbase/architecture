@@ -7,17 +7,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { getCart, removeFromCart, clearCart, CartItem } from '@/lib/cart';
 import Link from 'next/link';
 import Image from 'next/image';
+import { DemoModeCallout } from '@/components/demo-mode-callout';
 
 export default function SharePage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [synthesis, setSynthesis] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [prompt, setPrompt] = useState(
     'Please help join these ideas into a cohesive 500-word mini essay. Look for common themes, connections, and insights across the content.'
   );
 
   useEffect(() => {
     updateCartItems();
+  }, []);
+
+  // Check demo mode on mount
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await fetch('/api/demo-mode');
+        const data = await response.json();
+        setIsDemoMode(data.isDemoMode);
+      } catch (error) {
+        console.error('Failed to check demo mode:', error);
+      }
+    };
+    checkDemoMode();
   }, []);
 
   const updateCartItems = () => {
@@ -108,17 +124,19 @@ export default function SharePage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-4">
+      {isDemoMode && <DemoModeCallout />}
+      
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
             <div>
               <CardTitle>Share & Synthesize</CardTitle>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">
                 Combine ideas from your cart into a cohesive narrative
               </p>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               {cartItems.length > 0 && (
                 <Button onClick={handleClearCart} variant="outline" size="sm">
                   Clear Cart ({cartItems.length})
@@ -197,17 +215,18 @@ export default function SharePage() {
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   className="min-h-20"
-                  placeholder="Enter your prompt for how to synthesize these entries..."
+                  placeholder={isDemoMode ? "Synthesis disabled in demo mode" : "Enter your prompt for how to synthesize these entries..."}
+                  disabled={isDemoMode}
                 />
               </div>
 
               <div className="flex justify-center">
                 <Button 
                   onClick={handleSynthesize} 
-                  disabled={loading || cartItems.length === 0}
+                  disabled={isDemoMode || loading || cartItems.length === 0}
                   size="lg"
                 >
-                  {loading ? 'Synthesizing...' : `Synthesize ${cartItems.length} Items`}
+                  {isDemoMode ? 'Synthesize Disabled' : loading ? 'Synthesizing...' : `Synthesize ${cartItems.length} Items`}
                 </Button>
               </div>
             </div>
