@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { addToCart, isInCart } from '@/lib/cart';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
+import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
 
 interface Entry {
   id: string;
@@ -37,12 +38,56 @@ export default function EntryPage() {
   const [commentText, setCommentText] = useState('');
   const [commentFile, setCommentFile] = useState<File | null>(null);
   const [addingComment, setAddingComment] = useState(false);
+  const [commentMetadata, setCommentMetadata] = useState<{title?: string; source?: string}>({});
+  const [fetchingCommentTitle, setFetchingCommentTitle] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchEntry();
     }
   }, [id]);
+
+  // Auto-detect URLs in comment text and fetch titles
+  useEffect(() => {
+    const detectAndFetchUrl = async () => {
+      if (!commentText.trim()) {
+        setCommentMetadata({});
+        return;
+      }
+      
+      const urls = extractUrls(commentText);
+      if (urls.length > 0 && !commentMetadata.title && !commentMetadata.source) {
+        const firstUrl = urls[0];
+        setFetchingCommentTitle(true);
+        
+        try {
+          const title = await fetchUrlTitle(firstUrl);
+          if (title) {
+            setCommentMetadata({
+              title,
+              source: firstUrl
+            });
+            // Replace the URL in the comment text with the title
+            setCommentText(prev => prev.replace(firstUrl, title));
+          } else {
+            setCommentMetadata({
+              source: firstUrl
+            });
+          }
+        } catch (error) {
+          console.error('Failed to fetch URL title for comment:', error);
+          setCommentMetadata({
+            source: firstUrl
+          });
+        } finally {
+          setFetchingCommentTitle(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(detectAndFetchUrl, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [commentText, commentMetadata.title, commentMetadata.source]);
 
   const fetchEntry = async () => {
     try {
@@ -280,8 +325,8 @@ export default function EntryPage() {
             metadata: {
               type: 'comment',
               link: id,
-              title: entry?.metadata?.title,
-              source: entry?.metadata?.source,
+              title: commentMetadata.title || entry?.metadata?.title,
+              source: commentMetadata.source || entry?.metadata?.source,
               backlinks: [id]
             },
             link: id
@@ -290,6 +335,7 @@ export default function EntryPage() {
         
         if (response.ok) {
           setCommentText('');
+          setCommentMetadata({});
           fetchComments();
           fetchEntry(); // Refresh to show updated backlinks
         }
@@ -561,12 +607,24 @@ export default function EntryPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="space-y-3">
-              <Textarea
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="min-h-20"
-              />
+              <div className="space-y-2">
+                <Textarea
+                  placeholder={fetchingCommentTitle ? "Add a comment... (fetching URL title)" : "Add a comment..."}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="min-h-20"
+                />
+                {fetchingCommentTitle && (
+                  <div className="text-sm text-blue-600">
+                    🔄 Fetching URL title...
+                  </div>
+                )}
+                {commentMetadata.title && (
+                  <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+                    📄 Found: {commentMetadata.title}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center space-x-2">
                 <input
                   type="file"

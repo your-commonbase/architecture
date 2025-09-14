@@ -23,11 +23,13 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState<'both' | 'semantic' | 'fulltext'>('both');
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
     
     setLoading(true);
+    setHasSearched(true);
     try {
       const searchTypes: any = {};
       
@@ -93,7 +95,12 @@ export default function SearchPage() {
                 type="text"
                 placeholder="Enter your search query..."
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  if (hasSearched && e.target.value.trim() !== query.trim()) {
+                    setHasSearched(false);
+                  }
+                }}
                 onKeyPress={handleKeyPress}
                 className="flex-1"
               />
@@ -217,7 +224,7 @@ export default function SearchPage() {
         </div>
       )}
       
-      {results.length === 0 && query && !loading && (
+      {results.length === 0 && query && !loading && hasSearched && (
         <Card>
           <CardContent className="text-center py-8">
             <div className="text-gray-500">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,13 +8,57 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
+import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
 
 export default function AddPage() {
   const [textData, setTextData] = useState('');
   const [metadata, setMetadata] = useState({ title: '', source: '' });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fetchingTitle, setFetchingTitle] = useState(false);
   const router = useRouter();
+
+  // Auto-detect URLs and fetch titles
+  useEffect(() => {
+    const detectAndFetchUrl = async () => {
+      if (!textData.trim()) return;
+      
+      const urls = extractUrls(textData);
+      if (urls.length > 0 && !metadata.title && !metadata.source) {
+        const firstUrl = urls[0];
+        setFetchingTitle(true);
+        
+        try {
+          const title = await fetchUrlTitle(firstUrl);
+          if (title) {
+            setMetadata(prev => ({
+              ...prev,
+              title,
+              source: firstUrl
+            }));
+            // Replace the URL in the text data with the title
+            setTextData(prev => prev.replace(firstUrl, title));
+          } else {
+            setMetadata(prev => ({
+              ...prev,
+              source: firstUrl
+            }));
+          }
+        } catch (error) {
+          console.error('Failed to fetch URL title:', error);
+          setMetadata(prev => ({
+            ...prev,
+            source: firstUrl
+          }));
+        } finally {
+          setFetchingTitle(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(detectAndFetchUrl, 500); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [textData, metadata.title, metadata.source]);
 
   const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,13 +161,17 @@ export default function AddPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title (optional)</Label>
+                    <Label htmlFor="title">
+                      Title (optional)
+                      {fetchingTitle && <span className="text-blue-600 ml-2">🔄 Fetching...</span>}
+                    </Label>
                     <Input
                       id="title"
                       type="text"
-                      placeholder="Enter a title..."
+                      placeholder={fetchingTitle ? "Fetching title..." : "Enter a title..."}
                       value={metadata.title}
                       onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
+                      disabled={fetchingTitle}
                     />
                   </div>
                   
