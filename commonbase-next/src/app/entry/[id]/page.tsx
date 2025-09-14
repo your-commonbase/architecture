@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
 import { DemoModeCallout } from '@/components/demo-mode-callout';
+import { SimilarityScatterPlot } from '@/components/similarity-scatter-plot';
 
 interface Entry {
   id: string;
@@ -631,6 +632,15 @@ export default function EntryPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Similarity Scatter Plot */}
+      <SimilarityScatterPlot
+        entryId={id}
+        mainEntry={{
+          id: entry.id,
+          data: entry.data
+        }}
+      />
 
       <Card>
         <CardHeader>
