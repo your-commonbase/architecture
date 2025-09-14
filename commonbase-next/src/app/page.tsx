@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import Image from "next/image";
+import { BulkUploadButtons } from "@/components/bulk-upload-buttons";
 
 export default function Home() {
   return (
@@ -145,6 +146,9 @@ export default function Home() {
               <Button asChild size="sm" variant="outline" className="w-full">
                 <Link href="/ledger">View All Features</Link>
               </Button>
+              <div className="border-t pt-3">
+                <BulkUploadButtons />
+              </div>
             </div>
           </CardContent>
         </Card>
