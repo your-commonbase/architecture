@@ -19,9 +19,13 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@types/d3": "^7.4.3",
     "@types/pg": "^8.15.5",
+    "@types/three": "^0.180.0",
+    "3d-force-graph": "^1.79.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "d3": "^7.9.0",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5",
     "lucide-react": "^0.544.0",
@@ -31,7 +35,10 @@
     "pgvector": "^0.2.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "tailwind-merge": "^3.3.1"
+    "react-force-graph-3d": "^1.29.0",
+    "tailwind-merge": "^3.3.1",
+    "three": "^0.180.0",
+    "umap-js": "^1.4.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

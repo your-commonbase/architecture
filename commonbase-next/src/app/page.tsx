@@ -101,6 +101,23 @@ export default function Home() {
           </CardContent>
         </Card>
 
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <span>🌐</span>
+              <span>Graph</span>
+            </CardTitle>
+            <CardDescription>
+              Visualize your knowledge as an interactive 3D network showing connections between entries.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/graph">Explore Graph</Link>
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card className="hover:shadow-lg transition-shadow border-primary/20">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
