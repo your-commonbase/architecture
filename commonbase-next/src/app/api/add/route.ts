@@ -3,9 +3,19 @@ import { db } from '@/lib/db';
 import { commonbase, embeddings } from '@/lib/db/schema';
 import { generateEmbedding } from '@/lib/embeddings';
 import { eq } from 'drizzle-orm';
+import { isDemoMode, getDemoModeError } from '@/lib/demo-mode';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if demo mode is enabled
+    if (isDemoMode()) {
+      const error = getDemoModeError();
+      return NextResponse.json({ 
+        error: error.message,
+        action: error.action 
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const { data, metadata = {}, link = null } = body;
 

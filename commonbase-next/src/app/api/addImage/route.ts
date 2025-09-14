@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { commonbase, embeddings } from '@/lib/db/schema';
 import { generateEmbedding } from '@/lib/embeddings';
 import { eq } from 'drizzle-orm';
+import { isDemoMode, getDemoModeError } from '@/lib/demo-mode';
 
 async function transcribeImage(imagePath: string): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -56,6 +57,15 @@ async function transcribeImage(imagePath: string): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if demo mode is enabled
+    if (isDemoMode()) {
+      const error = getDemoModeError();
+      return NextResponse.json({ 
+        error: error.message,
+        action: error.action 
+      }, { status: 403 });
+    }
+
     const formData = await request.formData();
     const image = formData.get('image') as File;
     const link = formData.get('link') as string;

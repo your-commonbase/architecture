@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { isDemoMode, getDemoModeError } from '@/lib/demo-mode';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,6 +8,15 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if demo mode is enabled
+    if (isDemoMode()) {
+      const error = getDemoModeError();
+      return NextResponse.json({ 
+        error: error.message,
+        action: error.action 
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const { prompt, content } = body;
 

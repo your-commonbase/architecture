@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
 import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
+import { DemoModeCallout } from '@/components/demo-mode-callout';
 
 export default function AddPage() {
   const [textData, setTextData] = useState('');
@@ -16,7 +17,22 @@ export default function AddPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchingTitle, setFetchingTitle] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const router = useRouter();
+
+  // Check demo mode on mount
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await fetch('/api/demo-mode');
+        const data = await response.json();
+        setIsDemoMode(data.isDemoMode);
+      } catch (error) {
+        console.error('Failed to check demo mode:', error);
+      }
+    };
+    checkDemoMode();
+  }, []);
 
   // Auto-detect URLs and fetch titles
   useEffect(() => {
@@ -134,6 +150,8 @@ export default function AddPage() {
 
   return (
     <div className="container mx-auto py-8 max-w-4xl">
+      {isDemoMode && <DemoModeCallout />}
+      
       <Card>
         <CardHeader>
           <CardTitle>Add New Entry</CardTitle>
@@ -151,10 +169,11 @@ export default function AddPage() {
                   <Label htmlFor="textData">Content *</Label>
                   <Textarea
                     id="textData"
-                    placeholder="Enter your text content here..."
+                    placeholder={isDemoMode ? "Adding disabled in demo mode" : "Enter your text content here..."}
                     value={textData}
                     onChange={(e) => setTextData(e.target.value)}
                     className="min-h-40 resize-y"
+                    disabled={isDemoMode}
                     required
                   />
                 </div>
@@ -168,10 +187,10 @@ export default function AddPage() {
                     <Input
                       id="title"
                       type="text"
-                      placeholder={fetchingTitle ? "Fetching title..." : "Enter a title..."}
+                      placeholder={isDemoMode ? "Adding disabled" : fetchingTitle ? "Fetching title..." : "Enter a title..."}
                       value={metadata.title}
                       onChange={(e) => setMetadata({ ...metadata, title: e.target.value })}
-                      disabled={fetchingTitle}
+                      disabled={isDemoMode || fetchingTitle}
                     />
                   </div>
                   
@@ -180,9 +199,10 @@ export default function AddPage() {
                     <Input
                       id="source"
                       type="url"
-                      placeholder="https://example.com"
+                      placeholder={isDemoMode ? "Adding disabled" : "https://example.com"}
                       value={metadata.source}
                       onChange={(e) => setMetadata({ ...metadata, source: e.target.value })}
+                      disabled={isDemoMode}
                     />
                   </div>
                 </div>
@@ -200,9 +220,9 @@ export default function AddPage() {
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={loading || !textData.trim()}
+                    disabled={loading || !textData.trim() || isDemoMode}
                   >
-                    {loading ? 'Adding...' : 'Add Text Entry'}
+                    {isDemoMode ? 'Adding Disabled' : loading ? 'Adding...' : 'Add Text Entry'}
                   </Button>
                 </div>
               </form>
@@ -217,6 +237,7 @@ export default function AddPage() {
                     type="file"
                     accept="image/*"
                     onChange={handleFileChange}
+                    disabled={isDemoMode}
                     required
                   />
                   {selectedFile && (
@@ -260,9 +281,9 @@ export default function AddPage() {
                   </Button>
                   <Button 
                     type="submit" 
-                    disabled={loading || !selectedFile}
+                    disabled={loading || !selectedFile || isDemoMode}
                   >
-                    {loading ? 'Processing Image...' : 'Add Image Entry'}
+                    {isDemoMode ? 'Adding Disabled' : loading ? 'Processing Image...' : 'Add Image Entry'}
                   </Button>
                 </div>
               </form>

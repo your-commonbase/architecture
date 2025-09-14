@@ -11,6 +11,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ExternalLink } from 'lucide-react';
 import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
+import { DemoModeCallout } from '@/components/demo-mode-callout';
 
 interface Entry {
   id: string;
@@ -40,12 +41,27 @@ export default function EntryPage() {
   const [addingComment, setAddingComment] = useState(false);
   const [commentMetadata, setCommentMetadata] = useState<{title?: string; source?: string}>({});
   const [fetchingCommentTitle, setFetchingCommentTitle] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchEntry();
     }
   }, [id]);
+
+  // Check demo mode on mount
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await fetch('/api/demo-mode');
+        const data = await response.json();
+        setIsDemoMode(data.isDemoMode);
+      } catch (error) {
+        console.error('Failed to check demo mode:', error);
+      }
+    };
+    checkDemoMode();
+  }, []);
 
   // Auto-detect URLs in comment text and fetch titles
   useEffect(() => {
@@ -371,6 +387,8 @@ export default function EntryPage() {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
+      {isDemoMode && <DemoModeCallout />}
+      
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
@@ -609,10 +627,11 @@ export default function EntryPage() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <Textarea
-                  placeholder={fetchingCommentTitle ? "Add a comment... (fetching URL title)" : "Add a comment..."}
+                  placeholder={isDemoMode ? "Comments disabled in demo mode" : fetchingCommentTitle ? "Add a comment... (fetching URL title)" : "Add a comment..."}
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   className="min-h-20"
+                  disabled={isDemoMode}
                 />
                 {fetchingCommentTitle && (
                   <div className="text-sm text-blue-600">
@@ -638,8 +657,9 @@ export default function EntryPage() {
                   size="sm" 
                   type="button"
                   onClick={() => document.getElementById('comment-image')?.click()}
+                  disabled={isDemoMode}
                 >
-                  📷 Add Image
+                  📷 {isDemoMode ? 'Disabled' : 'Add Image'}
                 </Button>
                 {commentFile && (
                   <div className="flex items-center space-x-2">
@@ -654,10 +674,10 @@ export default function EntryPage() {
                 )}
                 <Button 
                   onClick={handleAddComment}
-                  disabled={addingComment || (!commentText.trim() && !commentFile)}
+                  disabled={isDemoMode || addingComment || (!commentText.trim() && !commentFile)}
                   size="sm"
                 >
-                  {addingComment ? 'Adding...' : 'Add Comment'}
+                  {isDemoMode ? 'Comments Disabled' : addingComment ? 'Adding...' : 'Add Comment'}
                 </Button>
               </div>
             </div>
