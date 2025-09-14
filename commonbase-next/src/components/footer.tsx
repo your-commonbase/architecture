@@ -20,7 +20,7 @@ export function Footer() {
               rel="noopener noreferrer"
               className="text-black font-semibold hover:underline"
             >
-              Want syncing across devices, the newest feature set, and more? →
+              Want syncing across mobile and desktop, the newest feature set, and more? →
             </a>
           {/* Consulting */}
             <a 

@@ -138,6 +138,25 @@ export default function Home() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="neo-purple border-4">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-2xl">
+              <span>🔌</span>
+              <span>API Docs</span>
+            </CardTitle>
+            <CardDescription className="text-black font-semibold">
+              Integrate with Commonbase programmatically. Upload content via API, build extensions, and automate workflows.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Button asChild size="sm" className="w-full bg-[#A8A6FF] text-black hover:bg-[#9B99FF] font-bold">
+                <Link href="/howto/api">View API Docs</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="neo-card neo-lime border-4 mt-12">
@@ -177,6 +196,10 @@ export default function Home() {
             <div className="flex items-center space-x-3">
               <span className="text-2xl font-black text-black">✓</span>
               <span className="font-semibold text-black">Rich metadata and tagging support</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-2xl font-black text-black">✓</span>
+              <span className="font-semibold text-black">RESTful API for programmatic access</span>
             </div>
           </div>
         </div>
