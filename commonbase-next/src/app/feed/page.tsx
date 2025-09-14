@@ -21,7 +21,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchRandomEntries = async (count = 2) => {
+  const fetchRandomEntries = async (count = 10) => {
     if (loading) return;
     
     setLoading(true);

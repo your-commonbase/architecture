@@ -38,7 +38,7 @@ export function Navigation() {
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-8">
             <Link href="/" className="text-xl font-bold text-primary">
-              Commonbase
+              YCB / Commonbase
             </Link>
             
             <div className="flex space-x-4">
@@ -82,6 +82,14 @@ export function Navigation() {
                 <Link href="/share">
                   Share {cartCount > 0 && `(${cartCount})`}
                 </Link>
+              </Button>
+
+              <Button
+                variant={isActive('/graph') ? 'default' : 'ghost'}
+                size="sm"
+                asChild
+              >
+                <Link href="/graph">Graph</Link>
               </Button>
             </div>
           </div>
