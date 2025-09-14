@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 export default function ApiDocsPage() {
-  const [baseUrl, setBaseUrl] = useState('http://localhost:3000/');
+  const [baseUrl, setBaseUrl] = useState('http://localhost:3000');
   
   return (
     <div className="container mx-auto py-8 max-w-6xl space-y-8">
@@ -30,14 +30,14 @@ export default function ApiDocsPage() {
         </CardHeader>
         <CardContent className="p-6">
           <div className="space-y-3">
-            <p>Replace <code className="bg-gray-100 px-2 py-1 rounded">http://localhost:3000/</code> with your actual domain:</p>
+            <p>Replace <code className="bg-gray-100 px-2 py-1 rounded">http://localhost:3000</code> with your actual domain:</p>
             <div className="flex space-x-2">
               <input
                 type="url"
                 value={baseUrl}
                 onChange={(e) => setBaseUrl(e.target.value)}
                 className="flex-1 px-3 py-2 border-2 border-black rounded"
-                placeholder="http://localhost:3000/"
+                placeholder="http://localhost:3000"
               />
             </div>
           </div>
