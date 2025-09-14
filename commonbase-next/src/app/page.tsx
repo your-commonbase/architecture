@@ -144,7 +144,7 @@ export default function Home() {
                 <Link href="/add">Add First Entry</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="w-full">
-                <Link href="/ledger">View All Features</Link>
+                <Link href="https://github.com/your-commonbase/commonbase/blob/main/commonbase-next/README.md" target="_blank" rel="noopener noreferrer">View All Features</Link>
               </Button>
               <div className="border-t pt-3">
                 <BulkUploadButtons />

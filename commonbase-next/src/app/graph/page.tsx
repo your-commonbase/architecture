@@ -190,7 +190,7 @@ export default function GraphPage() {
     return allEmbeddings;
   };
 
-  const fetchGraphData = async (page = 1, limit = 10) => {
+  const fetchGraphData = async (page = 1, limit = 50) => {
     if (loading) return;
     
     setLoading(true);
@@ -287,7 +287,7 @@ export default function GraphPage() {
     
     const loadInitialData = async () => {
       if (mounted) {
-        await fetchGraphData(1, 10);
+        await fetchGraphData(1, 50);
       }
     };
     
@@ -404,7 +404,7 @@ export default function GraphPage() {
 
   const loadMoreData = () => {
     if (hasMore && !loading) {
-      fetchGraphData(currentPage + 1, 10);
+      fetchGraphData(currentPage + 1, 50);
     }
   };
 

@@ -13,6 +13,8 @@ import { ExternalLink } from 'lucide-react';
 import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
 import { DemoModeCallout } from '@/components/demo-mode-callout';
 import { SimilarityScatterPlot } from '@/components/similarity-scatter-plot';
+import YouTube from 'react-youtube';
+import { extractYouTubeVideoId, isYouTubeUrl } from '@/lib/youtube-utils';
 
 interface Entry {
   id: string;
@@ -504,15 +506,42 @@ export default function EntryPage() {
 
             {!isImage && entry.metadata?.source && (
               <div className="mb-4">
-                <a
-                  href={entry.metadata.source}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline inline-flex items-center gap-1"
-                >
-                  {entry.metadata?.title || entry.metadata.source}
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+                {isYouTubeUrl(entry.metadata.source) ? (
+                  <div className="space-y-3">
+                    <YouTube
+                      videoId={extractYouTubeVideoId(entry.metadata.source)!}
+                      opts={{
+                        width: '100%',
+                        height: '315',
+                        playerVars: {
+                          autoplay: 0,
+                          modestbranding: 1,
+                          rel: 0,
+                        },
+                      }}
+                      className="w-full max-w-2xl"
+                    />
+                    <a
+                      href={entry.metadata.source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline inline-flex items-center gap-1 text-sm"
+                    >
+                      {entry.metadata?.title || 'Watch on YouTube'}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                ) : (
+                  <a
+                    href={entry.metadata.source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                  >
+                    {entry.metadata?.title || entry.metadata.source}
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                )}
               </div>
             )}
             
