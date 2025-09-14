@@ -7,11 +7,10 @@ export default function Home() {
     <div className="container mx-auto py-12 space-y-8">
       <div className="text-center space-y-6">
         <h1 className="text-5xl font-black tracking-tight text-black">
-          Welcome to Commonbase
+          Welcome to YCB / Commonbase
         </h1>
         <p className="text-xl text-black font-semibold max-w-2xl mx-auto">
-          A simple, powerful knowledge management system with semantic search, 
-          image processing, and AI-powered synthesis capabilities.
+          A simple ledger with complex associations.
         </p>
       </div>
 

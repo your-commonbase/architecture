@@ -319,6 +319,10 @@ export default function EntryPage() {
 
   const isImage = entry.metadata?.type === 'image';
 
+  const truncateText = (text: string, maxLength: number = 100) => {
+    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+  };
+
   return (
     <div className="container mx-auto py-8 space-y-6">
       <Card>
@@ -358,7 +362,7 @@ export default function EntryPage() {
                         {searchResults.map((result: any) => (
                           <div key={result.id} className="flex items-center justify-between p-2 border rounded">
                             <div className="flex-1">
-                              <div className="text-sm">{result.data.substring(0, 100)}...</div>
+                              <div className="text-sm">{truncateText(result.data, 100)}</div>
                               <div className="text-xs text-gray-500">
                                 Similarity: {(result.similarity * 100).toFixed(1)}%
                               </div>
@@ -483,7 +487,7 @@ export default function EntryPage() {
                           </div>
                         )}
                         <Link href={`/entry/${link.id}`} className="text-blue-600 hover:underline">
-                          {link.data.substring(0, 100)}...
+                          {truncateText(link.data, 100)}
                         </Link>
                       </div>
                     ))}
@@ -509,7 +513,7 @@ export default function EntryPage() {
                           </div>
                         )}
                         <Link href={`/entry/${backlink.id}`} className="text-blue-600 hover:underline">
-                          {backlink.data.substring(0, 100)}...
+                          {truncateText(backlink.data, 100)}
                         </Link>
                       </div>
                     ))}
@@ -535,7 +539,7 @@ export default function EntryPage() {
                           </div>
                         )}
                         <Link href={`/entry/${neighbor.id}`} className="text-blue-600 hover:underline">
-                          {neighbor.data.substring(0, 100)}...
+                          {truncateText(neighbor.data, 100)}
                         </Link>
                         <div className="text-xs text-gray-500 mt-1">
                           Similarity: {(neighbor.similarity * 100).toFixed(1)}%
