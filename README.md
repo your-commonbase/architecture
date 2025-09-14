@@ -1,5 +1,7 @@
 # Architecture of a Commonbase
 
+**Want to just run a Commonbase of your own? Get started with [Commonbase Next](https://github.com/your-commonbase/commonbase/tree/main/commonbase-next)**
+
 ## Intro
 
 **A Commonbase is a core data structure for [Personal Library Science](https://www.bramadams.dev/issue-54/).**
