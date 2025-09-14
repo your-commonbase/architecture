@@ -6,9 +6,11 @@ export default function Home() {
   return (
     <div className="container mx-auto py-12 space-y-8">
       <div className="text-center space-y-6">
-        <h1 className="text-5xl font-black tracking-tight text-black">
-          Welcome to YCB / Commonbase
-        </h1>
+        <div className="flex items-center justify-center space-x-4">
+          <h1 className="text-5xl font-black tracking-tight text-black">
+            Welcome to YCB / Commonbase
+          </h1>
+        </div>
         <p className="text-xl text-black font-semibold max-w-2xl mx-auto">
           A simple ledger with complex associations.
         </p>

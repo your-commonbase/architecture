@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { getCart } from '@/lib/cart';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -37,8 +38,15 @@ export function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center space-x-8">
-            <Link href="/" className="text-xl font-bold text-primary">
-              YCB / Commonbase
+            <Link href="/" className="flex items-center space-x-2 text-xl font-bold text-primary">
+              <Image
+                src="/logo.png"
+                alt="YCB / Commonbase Logo"
+                width={32}
+                height={32}
+                className="object-contain"
+              />
+              <span>YCB / Commonbase</span>
             </Link>
             
             <div className="flex space-x-4">

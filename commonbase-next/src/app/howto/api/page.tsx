@@ -509,6 +509,436 @@ setInterval(() => {
               </pre>
             </CardContent>
           </Card>
+
+          <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <CardHeader className="bg-[#A8A6FF]">
+              <CardTitle>📝 Obsidian Plugin</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <p className="mb-4 text-gray-700">Sync your Obsidian notes to Commonbase with this plugin example:</p>
+              <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
+{`// main.ts - Obsidian Plugin
+import { Plugin, Notice, TFile } from 'obsidian';
+
+interface CommonbaseSettings {
+  apiUrl: string;
+  syncOnSave: boolean;
+}
+
+export default class CommonbasePlugin extends Plugin {
+  settings: CommonbaseSettings;
+
+  async onload() {
+    await this.loadSettings();
+    
+    // Add ribbon icon
+    this.addRibbonIcon('upload', 'Sync to Commonbase', () => {
+      this.syncCurrentNote();
+    });
+
+    // Add command
+    this.addCommand({
+      id: 'sync-to-commonbase',
+      name: 'Sync current note to Commonbase',
+      callback: () => this.syncCurrentNote()
+    });
+
+    // Auto-sync on save if enabled
+    if (this.settings.syncOnSave) {
+      this.registerEvent(
+        this.app.vault.on('modify', (file) => {
+          if (file instanceof TFile && file.extension === 'md') {
+            this.syncNote(file);
+          }
+        })
+      );
+    }
+  }
+
+  async syncCurrentNote() {
+    const activeFile = this.app.workspace.getActiveFile();
+    if (activeFile) {
+      await this.syncNote(activeFile);
+    }
+  }
+
+  async syncNote(file: TFile) {
+    try {
+      const content = await this.app.vault.read(file);
+      const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+      
+      const entry = {
+        data: content,
+        metadata: {
+          title: file.basename,
+          source: \`obsidian://open?vault=\${this.app.vault.getName()}&file=\${file.path}\`,
+          type: 'obsidian_note',
+          tags: frontmatter?.tags || [],
+          created: new Date(file.stat.ctime).toISOString(),
+          modified: new Date(file.stat.mtime).toISOString(),
+          vault: this.app.vault.getName(),
+          path: file.path
+        }
+      };
+
+      const response = await fetch(\`\${this.settings.apiUrl}/api/add\`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(entry)
+      });
+
+      if (response.ok) {
+        new Notice(\`Synced "\${file.basename}" to Commonbase\`);
+      } else {
+        throw new Error(\`HTTP \${response.status}\`);
+      }
+    } catch (error) {
+      new Notice(\`Failed to sync note: \${error.message}\`);
+    }
+  }
+
+  async loadSettings() {
+    this.settings = Object.assign({
+      apiUrl: '${baseUrl}',
+      syncOnSave: false
+    }, await this.loadData());
+  }
+}`}
+              </pre>
+            </CardContent>
+          </Card>
+
+          <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <CardHeader className="bg-[#FFAFF5]">
+              <CardTitle>🗃️ Notion Integration</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <p className="mb-4 text-gray-700">Export and sync your Notion pages to Commonbase:</p>
+              <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
+{`// notion-sync.js - Notion to Commonbase
+const { Client } = require('@notionhq/client');
+const axios = require('axios');
+
+class NotionToCommonbase {
+  constructor(notionToken, commonbaseUrl) {
+    this.notion = new Client({ auth: notionToken });
+    this.commonbaseUrl = commonbaseUrl;
+  }
+
+  async syncDatabase(databaseId) {
+    try {
+      const response = await this.notion.databases.query({
+        database_id: databaseId,
+      });
+
+      for (const page of response.results) {
+        await this.syncPage(page.id);
+        // Rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } catch (error) {
+      console.error('Database sync failed:', error);
+    }
+  }
+
+  async syncPage(pageId) {
+    try {
+      const [page, blocks] = await Promise.all([
+        this.notion.pages.retrieve({ page_id: pageId }),
+        this.notion.blocks.children.list({ block_id: pageId })
+      ]);
+
+      const content = await this.blocksToText(blocks.results);
+      const properties = page.properties;
+
+      const entry = {
+        data: content,
+        metadata: {
+          title: this.extractTitle(properties),
+          source: \`https://notion.so/\${pageId.replace(/-/g, '')}\`,
+          type: 'notion_page',
+          notionId: pageId,
+          database: page.parent.database_id,
+          created: page.created_time,
+          updated: page.last_edited_time,
+          properties: this.extractProperties(properties)
+        }
+      };
+
+      const response = await axios.post(\`\${this.commonbaseUrl}/api/add\`, entry);
+      console.log(\`✅ Synced Notion page: \${entry.metadata.title}\`);
+      return response.data;
+    } catch (error) {
+      console.error(\`Failed to sync page \${pageId}:\`, error.message);
+    }
+  }
+
+  async blocksToText(blocks) {
+    let text = '';
+    for (const block of blocks) {
+      const type = block.type;
+      if (block[type]?.rich_text) {
+        const blockText = block[type].rich_text
+          .map(rt => rt.plain_text)
+          .join('');
+        text += blockText + '\\n';
+      }
+    }
+    return text.trim();
+  }
+
+  extractTitle(properties) {
+    for (const [key, prop] of Object.entries(properties)) {
+      if (prop.type === 'title' && prop.title.length > 0) {
+        return prop.title[0].plain_text;
+      }
+    }
+    return 'Untitled';
+  }
+
+  extractProperties(properties) {
+    const extracted = {};
+    for (const [key, prop] of Object.entries(properties)) {
+      if (prop.type === 'multi_select') {
+        extracted[key] = prop.multi_select.map(s => s.name);
+      } else if (prop.type === 'select') {
+        extracted[key] = prop.select?.name || null;
+      } else if (prop.type === 'rich_text') {
+        extracted[key] = prop.rich_text[0]?.plain_text || '';
+      }
+    }
+    return extracted;
+  }
+}
+
+// Usage
+const sync = new NotionToCommonbase(
+  'YOUR_NOTION_TOKEN',
+  '${baseUrl}'
+);
+
+// Sync a specific database
+sync.syncDatabase('your-database-id');
+
+// Or sync individual pages
+sync.syncPage('your-page-id');`}
+              </pre>
+            </CardContent>
+          </Card>
+
+          <Card className="border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <CardHeader className="bg-[#C7F9FF]">
+              <CardTitle>🎵 Social Media Batch Download</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <p className="mb-4 text-gray-700">Download and archive content from Spotify, YouTube, Twitter, etc.:</p>
+              <pre className="bg-black text-green-400 p-4 rounded overflow-x-auto">
+{`// social-media-archiver.js
+const axios = require('axios');
+const puppeteer = require('puppeteer');
+
+class SocialMediaArchiver {
+  constructor(commonbaseUrl) {
+    this.commonbaseUrl = commonbaseUrl;
+  }
+
+  // Spotify Playlist Archiver
+  async archiveSpotifyPlaylist(playlistUrl, spotifyToken) {
+    try {
+      const playlistId = playlistUrl.match(/playlist\/([a-zA-Z0-9]+)/)[1];
+      
+      const response = await axios.get(
+        \`https://api.spotify.com/v1/playlists/\${playlistId}/tracks\`,
+        { headers: { 'Authorization': \`Bearer \${spotifyToken}\` } }
+      );
+
+      for (const item of response.data.items) {
+        const track = item.track;
+        const entry = {
+          data: \`\${track.name} by \${track.artists.map(a => a.name).join(', ')} - Album: \${track.album.name}\`,
+          metadata: {
+            title: \`♪ \${track.name}\`,
+            source: track.external_urls.spotify,
+            type: 'spotify_track',
+            artist: track.artists.map(a => a.name),
+            album: track.album.name,
+            duration: track.duration_ms,
+            popularity: track.popularity,
+            preview_url: track.preview_url
+          }
+        };
+        
+        await this.saveToCommonbase(entry);
+      }
+    } catch (error) {
+      console.error('Spotify archive failed:', error);
+    }
+  }
+
+  // YouTube Playlist Archiver
+  async archiveYouTubePlaylist(playlistUrl, youtubeApiKey) {
+    try {
+      const playlistId = playlistUrl.match(/list=([a-zA-Z0-9_-]+)/)[1];
+      
+      const response = await axios.get(
+        \`https://www.googleapis.com/youtube/v3/playlistItems\`,
+        {
+          params: {
+            part: 'snippet',
+            maxResults: 50,
+            playlistId: playlistId,
+            key: youtubeApiKey
+          }
+        }
+      );
+
+      for (const item of response.data.items) {
+        const snippet = item.snippet;
+        const entry = {
+          data: \`\${snippet.title} - \${snippet.description.substring(0, 500)}\`,
+          metadata: {
+            title: \`📺 \${snippet.title}\`,
+            source: \`https://youtube.com/watch?v=\${snippet.resourceId.videoId}\`,
+            type: 'youtube_video',
+            channel: snippet.videoOwnerChannelTitle,
+            publishedAt: snippet.publishedAt,
+            thumbnail: snippet.thumbnails.medium.url,
+            videoId: snippet.resourceId.videoId
+          }
+        };
+        
+        await this.saveToCommonbase(entry);
+      }
+    } catch (error) {
+      console.error('YouTube archive failed:', error);
+    }
+  }
+
+  // Twitter/X Thread Archiver
+  async archiveTwitterThread(threadUrl) {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    
+    try {
+      await page.goto(threadUrl, { waitUntil: 'networkidle2' });
+      
+      // Extract tweets from thread
+      const tweets = await page.evaluate(() => {
+        const tweetElements = document.querySelectorAll('[data-testid="tweet"]');
+        return Array.from(tweetElements).map(tweet => {
+          const text = tweet.querySelector('[data-testid="tweetText"]')?.textContent || '';
+          const author = tweet.querySelector('[data-testid="User-Name"]')?.textContent || '';
+          const time = tweet.querySelector('time')?.getAttribute('datetime') || '';
+          return { text, author, time };
+        });
+      });
+
+      for (const [index, tweet] of tweets.entries()) {
+        const entry = {
+          data: tweet.text,
+          metadata: {
+            title: \`🐦 \${tweet.author} - Tweet \${index + 1}\`,
+            source: threadUrl,
+            type: 'twitter_thread',
+            author: tweet.author,
+            publishedAt: tweet.time,
+            threadPosition: index + 1,
+            totalTweets: tweets.length
+          }
+        };
+        
+        await this.saveToCommonbase(entry);
+      }
+    } catch (error) {
+      console.error('Twitter archive failed:', error);
+    } finally {
+      await browser.close();
+    }
+  }
+
+  // LinkedIn Article Archiver
+  async archiveLinkedInProfile(profileUrl) {
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    
+    try {
+      await page.goto(profileUrl + '/detail/recent-activity/posts/', {
+        waitUntil: 'networkidle2'
+      });
+      
+      const posts = await page.evaluate(() => {
+        const postElements = document.querySelectorAll('.feed-shared-update-v2');
+        return Array.from(postElements).map(post => {
+          const text = post.querySelector('.feed-shared-text')?.textContent || '';
+          const author = post.querySelector('.feed-shared-actor__name')?.textContent || '';
+          const time = post.querySelector('.feed-shared-actor__sub-description')?.textContent || '';
+          return { text: text.trim(), author: author.trim(), time };
+        });
+      });
+
+      for (const post of posts) {
+        if (post.text) {
+          const entry = {
+            data: post.text,
+            metadata: {
+              title: \`💼 \${post.author} - LinkedIn Post\`,
+              source: profileUrl,
+              type: 'linkedin_post',
+              author: post.author,
+              publishedAt: post.time
+            }
+          };
+          
+          await this.saveToCommonbase(entry);
+        }
+      }
+    } catch (error) {
+      console.error('LinkedIn archive failed:', error);
+    } finally {
+      await browser.close();
+    }
+  }
+
+  async saveToCommonbase(entry) {
+    try {
+      const response = await axios.post(\`\${this.commonbaseUrl}/api/add\`, entry);
+      console.log(\`✅ Archived: \${entry.metadata.title}\`);
+      
+      // Rate limiting to avoid overwhelming the API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error(\`❌ Failed to archive: \${entry.metadata.title}\`, error.message);
+    }
+  }
+}
+
+// Usage Examples
+const archiver = new SocialMediaArchiver('${baseUrl}');
+
+// Archive a Spotify playlist
+archiver.archiveSpotifyPlaylist(
+  'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M',
+  'your-spotify-token'
+);
+
+// Archive a YouTube playlist  
+archiver.archiveYouTubePlaylist(
+  'https://youtube.com/playlist?list=PLrAXtmRdnEQy6nuLvGWM2cROotopmza6Y',
+  'your-youtube-api-key'
+);
+
+// Archive a Twitter thread
+archiver.archiveTwitterThread(
+  'https://twitter.com/username/status/1234567890'
+);
+
+// Archive LinkedIn posts
+archiver.archiveLinkedInProfile(
+  'https://linkedin.com/in/username'
+);`}
+              </pre>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
