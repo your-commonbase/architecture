@@ -84,7 +84,6 @@ A modern knowledge management system built with Next.js that combines semantic s
 ## Images
 
 <img width="3308" height="5090" alt="screencapture-localhost-3000-entry-00102190-e0e1-4e29-bf98-a9464775402c-2025-09-14-11_35_16" src="https://github.com/user-attachments/assets/ac5cb195-d703-4074-b301-2d429976e37b" />
-<img width="3308" height="2706" alt="screencapture-localhost-3000-entry-6efcb247-fcf0-43ba-b81b-05a0782cc443-2025-09-14-11_35_03" src="https://github.com/user-attachments/assets/98d3c645-adeb-4399-a8d2-ea2d1ccdf9d8" />
 <img width="3308" height="2706" alt="screencapture-localhost-3000-entry-6efcb247-fcf0-43ba-b81b-05a0782cc443-2025-09-14-11_34_49" src="https://github.com/user-attachments/assets/4ad86ee9-34d0-4840-8ea3-681fa5142b32" />
 <img width="3308" height="4590" alt="screencapture-localhost-3000-share-2025-09-14-11_30_49" src="https://github.com/user-attachments/assets/1103dfb2-45d5-429d-99ca-9eb3be014620" />
 <img width="3308" height="2442" alt="screencapture-localhost-3000-graph-2025-09-14-11_28_48" src="https://github.com/user-attachments/assets/8a86ec2f-3286-499d-9332-49a14e045d74" />
