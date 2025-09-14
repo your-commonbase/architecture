@@ -44,6 +44,7 @@ DATABASE_URL=postgresql://localhost:5432/commonbase
 DATABASE_NAME=commonbase
 OPENAI_API_KEY=sk-proj-[your-key]
 EMBEDDING_DIMENSIONS=1536
+DISABLE_ADD=false
 ```
 
 Make sure to replace `[your-key]` with your actual OpenAI API key.

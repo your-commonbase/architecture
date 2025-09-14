@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { commonbase } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
+import { isDemoMode } from '@/lib/demo-mode';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if demo mode is enabled
+    if (isDemoMode()) {
+      return NextResponse.json(
+        { error: 'Delete functionality is disabled in demo mode. Deploy your own instance at https://github.com/your-commonbase/commonbase' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { id } = body;
 

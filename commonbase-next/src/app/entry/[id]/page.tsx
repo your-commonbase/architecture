@@ -195,7 +195,9 @@ export default function EntryPage() {
       });
       
       if (response.ok) {
-        const allLinked = await response.json();
+        const result = await response.json();
+        // Handle both array response and object with entries property
+        const allLinked = Array.isArray(result) ? result : result.entries || [];
         // Filter for comments (either type=comment or isComment=true)
         const commentData = allLinked.filter((entry: any) => 
           entry.metadata?.type === 'comment' || entry.metadata?.isComment === true
@@ -386,14 +388,14 @@ export default function EntryPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-4">
       {isDemoMode && <DemoModeCallout />}
       
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start space-y-2 sm:space-y-0">
             <CardTitle>Entry Details</CardTitle>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2 sm:space-x-2">
               <Button
                 onClick={handleAddToCart}
                 disabled={isInCart(entry.id)}
@@ -446,20 +448,30 @@ export default function EntryPage() {
               </Dialog>
               
               {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-                  Edit
+                <Button 
+                  onClick={() => setIsEditing(true)} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isDemoMode}
+                >
+                  {isDemoMode ? 'Edit Disabled' : 'Edit'}
                 </Button>
               ) : (
                 <div className="flex space-x-2">
-                  <Button onClick={handleSave} size="sm">Save</Button>
+                  <Button onClick={handleSave} size="sm" disabled={isDemoMode}>Save</Button>
                   <Button onClick={() => setIsEditing(false)} variant="outline" size="sm">
                     Cancel
                   </Button>
                 </div>
               )}
               
-              <Button onClick={handleDelete} variant="destructive" size="sm">
-                Delete
+              <Button 
+                onClick={handleDelete} 
+                variant="destructive" 
+                size="sm"
+                disabled={isDemoMode}
+              >
+                {isDemoMode ? 'Delete Disabled' : 'Delete'}
               </Button>
             </div>
           </div>
@@ -508,6 +520,8 @@ export default function EntryPage() {
                 value={editData}
                 onChange={(e) => setEditData(e.target.value)}
                 className="min-h-32"
+                disabled={isDemoMode}
+                placeholder={isDemoMode ? "Editing disabled in demo mode" : ""}
               />
             ) : (
               <div className="prose max-w-none">
@@ -532,7 +546,7 @@ export default function EntryPage() {
             <CardTitle>Related Entries</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {links.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-2">Links</h3>

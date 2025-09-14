@@ -3,9 +3,18 @@ import { db } from '@/lib/db';
 import { commonbase, embeddings } from '@/lib/db/schema';
 import { generateEmbedding } from '@/lib/embeddings';
 import { eq } from 'drizzle-orm';
+import { isDemoMode } from '@/lib/demo-mode';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if demo mode is enabled
+    if (isDemoMode()) {
+      return NextResponse.json(
+        { error: 'Edit functionality is disabled in demo mode. Deploy your own instance at https://github.com/your-commonbase/commonbase' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { id, data = null, metadata = null } = body;
 

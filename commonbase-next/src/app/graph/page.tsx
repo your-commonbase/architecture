@@ -436,109 +436,106 @@ export default function GraphPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto py-4 sm:py-8 px-4">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Knowledge Graph</h1>
-          <p className="text-gray-600">
+          <h1 className="text-xl sm:text-2xl font-bold">Knowledge Graph</h1>
+          <p className="text-sm sm:text-base text-gray-600">
             Explore your entries in 2D space. Nodes represent entries positioned by semantic similarity, edges show connections.
           </p>
           <div className="text-xs text-gray-500">
             {graphData.nodes.length} nodes loaded, {graphData.links.length} links
           </div>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={resetView} variant="outline" size="sm">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+          <Button onClick={resetView} variant="outline" size="sm" className="w-full sm:w-auto">
             Reset View
           </Button>
           <Button 
             onClick={loadMoreData} 
             disabled={loading || !hasMore}
             size="sm"
+            className="w-full sm:w-auto"
           >
             {loading ? 'Loading...' : hasMore ? 'Load More' : 'All Loaded'}
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Graph Visualization */}
-        <div className="lg:col-span-3">
-          <Card>
-            <CardContent className="p-0">
-              <div 
-                ref={containerRef}
-                className="relative overflow-hidden rounded-lg bg-white"
-                style={{ height: '600px', width: '100%' }}
-              >
-                <svg
-                  ref={svgRef}
-                  width="100%"
-                  height="600"
-                  style={{ background: '#f8f9fa' }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Side Panel */}
-        <div className="lg:col-span-1 space-y-4">
-          {/* Legend */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Legend</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span className="text-xs">Text Entry</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span className="text-xs">Image Entry</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span className="text-xs">Comment</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-                <span className="text-xs">Synthesis</span>
-              </div>
-              <div className="border-t pt-2 mt-2">
-                <div className="text-xs text-gray-500">
-                  Node size = content length
+      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
+        {/* Side Panel - Mobile First */}
+        <div className="lg:col-span-1 space-y-4 order-1 lg:order-2">
+          {/* Show condensed stats on mobile */}
+          <div className="lg:hidden">
+            <Card>
+              <CardContent className="p-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span>Nodes: {graphData.nodes.length}</span>
+                  <span>Links: {graphData.links.length}</span>
+                  <span>More: {hasMore ? "Yes" : "No"}</span>
                 </div>
-                <div className="text-xs text-gray-500">
-                  Lines = connections
+              </CardContent>
+            </Card>
+          </div>
+          {/* Legend - Hidden on mobile, shown on desktop */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Legend</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-xs">Text Entry</span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-xs">Image Entry</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <span className="text-xs">Comment</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                  <span className="text-xs">Synthesis</span>
+                </div>
+                <div className="border-t pt-2 mt-2">
+                  <div className="text-xs text-gray-500">
+                    Node size = content length
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Lines = connections
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Graph Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between text-xs">
-                <span>Nodes:</span>
-                <Badge variant="secondary">{graphData.nodes.length}</Badge>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Connections:</span>
-                <Badge variant="secondary">{graphData.links.length}</Badge>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span>Has More:</span>
-                <Badge variant={hasMore ? "default" : "secondary"}>
-                  {hasMore ? "Yes" : "No"}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Stats - Hidden on mobile, shown on desktop */}
+          <div className="hidden lg:block">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Graph Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span>Nodes:</span>
+                  <Badge variant="secondary">{graphData.nodes.length}</Badge>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span>Connections:</span>
+                  <Badge variant="secondary">{graphData.links.length}</Badge>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span>Has More:</span>
+                  <Badge variant={hasMore ? "default" : "secondary"}>
+                    {hasMore ? "Yes" : "No"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Selected Node Details */}
           {selectedNode && (
@@ -582,6 +579,26 @@ export default function GraphPage() {
               </CardContent>
             </Card>
           )}
+          </div>
+        </div>
+        
+        {/* Graph Visualization */}
+        <div className="lg:col-span-3 order-2 lg:order-1">
+          <Card>
+            <CardContent className="p-0">
+              <div 
+                ref={containerRef}
+                className="relative overflow-hidden rounded-lg bg-white h-96 sm:h-[500px] lg:h-[600px]"
+              >
+                <svg
+                  ref={svgRef}
+                  width="100%"
+                  height="100%"
+                  style={{ background: '#f8f9fa' }}
+                />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

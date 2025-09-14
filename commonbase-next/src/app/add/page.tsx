@@ -149,7 +149,7 @@ export default function AddPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
+    <div className="container mx-auto py-4 sm:py-8 max-w-4xl px-4">
       {isDemoMode && <DemoModeCallout />}
       
       <Card>
@@ -178,7 +178,7 @@ export default function AddPage() {
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">
                       Title (optional)
@@ -207,7 +207,7 @@ export default function AddPage() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button 
                     type="button" 
                     variant="outline"
@@ -215,12 +215,14 @@ export default function AddPage() {
                       setTextData('');
                       setMetadata({ title: '', source: '' });
                     }}
+                    className="w-full sm:w-auto"
                   >
                     Clear
                   </Button>
                   <Button 
                     type="submit" 
                     disabled={loading || !textData.trim() || isDemoMode}
+                    className="w-full sm:w-auto"
                   >
                     {isDemoMode ? 'Adding Disabled' : loading ? 'Adding...' : 'Add Text Entry'}
                   </Button>
@@ -267,7 +269,7 @@ export default function AddPage() {
                   </div>
                 </div>
                 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
                   <Button 
                     type="button" 
                     variant="outline"
@@ -276,12 +278,14 @@ export default function AddPage() {
                       const fileInput = document.getElementById('imageFile') as HTMLInputElement;
                       if (fileInput) fileInput.value = '';
                     }}
+                    className="w-full sm:w-auto"
                   >
                     Clear
                   </Button>
                   <Button 
                     type="submit" 
                     disabled={loading || !selectedFile || isDemoMode}
+                    className="w-full sm:w-auto"
                   >
                     {isDemoMode ? 'Adding Disabled' : loading ? 'Processing Image...' : 'Add Image Entry'}
                   </Button>

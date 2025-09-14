@@ -124,19 +124,19 @@ export default function SharePage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-8 space-y-4 sm:space-y-6 px-4">
       {isDemoMode && <DemoModeCallout />}
       
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
             <div>
               <CardTitle>Share & Synthesize</CardTitle>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">
                 Combine ideas from your cart into a cohesive narrative
               </p>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               {cartItems.length > 0 && (
                 <Button onClick={handleClearCart} variant="outline" size="sm">
                   Clear Cart ({cartItems.length})
