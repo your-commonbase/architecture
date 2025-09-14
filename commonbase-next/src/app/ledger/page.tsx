@@ -164,7 +164,7 @@ export default function LedgerPage() {
             </div>
             
             {entries.map((entry) => (
-              <Card key={entry.id} className="neo-violet">
+              <Card key={entry.id}>
                 <CardContent className="pt-4">
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">

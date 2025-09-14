@@ -462,8 +462,27 @@ export default function GraphPage() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6">
-        {/* Side Panel - Mobile First */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-6">
+        {/* Graph Visualization */}
+        <div className="lg:col-span-3 order-2 lg:order-1">
+          <Card>
+            <CardContent className="p-0">
+              <div 
+                ref={containerRef}
+                className="relative overflow-hidden rounded-lg bg-white h-96"
+              >
+                <svg
+                  ref={svgRef}
+                  width="100%"
+                  height="100%"
+                  style={{ background: '#f8f9fa' }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Side Panel */}
         <div className="lg:col-span-1 space-y-4 order-1 lg:order-2">
           {/* Show condensed stats on mobile */}
           <div className="lg:hidden">
@@ -477,7 +496,7 @@ export default function GraphPage() {
               </CardContent>
             </Card>
           </div>
-          {/* Legend - Hidden on mobile, shown on desktop */}
+          {/* Legend - shown on desktop */}
           <div className="hidden lg:block">
             <Card>
               <CardHeader>
@@ -512,7 +531,7 @@ export default function GraphPage() {
             </Card>
           </div>
 
-          {/* Stats - Hidden on mobile, shown on desktop */}
+          {/* Stats - shown on desktop */}
           <div className="hidden lg:block">
             <Card>
               <CardHeader>
@@ -581,26 +600,6 @@ export default function GraphPage() {
           )}
           </div>
         </div>
-        
-        {/* Graph Visualization */}
-        <div className="lg:col-span-3 order-2 lg:order-1">
-          <Card>
-            <CardContent className="p-0">
-              <div 
-                ref={containerRef}
-                className="relative overflow-hidden rounded-lg bg-white h-96 sm:h-[500px] lg:h-[600px]"
-              >
-                <svg
-                  ref={svgRef}
-                  width="100%"
-                  height="100%"
-                  style={{ background: '#f8f9fa' }}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
-    </div>
   );
 }
