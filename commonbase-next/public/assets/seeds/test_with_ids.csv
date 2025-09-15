@@ -1,0 +1,4 @@
+data,id,metadata
+"Entry with custom ID","550e8401-e29b-41d4-a716-446655440000","{""type"": ""custom""}"
+"Entry without ID",,"{""type"": ""generated""}"
+"Entry with bad ID","not-a-uuid","{""type"": ""error""}"

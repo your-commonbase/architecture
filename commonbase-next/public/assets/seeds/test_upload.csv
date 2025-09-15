@@ -1,0 +1,4 @@
+data,metadata
+"This is a simple test entry","{""type"": ""test""}"
+"Another test entry without metadata",
+"Third test entry","{""category"": ""example""}"
