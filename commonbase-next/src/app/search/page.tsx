@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { addToCart, isInCart } from '@/lib/cart';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 interface SearchResult {
   id: string;
@@ -24,6 +25,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState<'both' | 'semantic' | 'fulltext'>('both');
   const [hasSearched, setHasSearched] = useState(false);
+  const [creatingEntry, setCreatingEntry] = useState(false);
+  const router = useRouter();
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -79,6 +82,42 @@ export default function SearchPage() {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleCreateEntryFromSearch = async () => {
+    if (!query.trim()) return;
+
+    setCreatingEntry(true);
+    try {
+      const googleSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+
+      const response = await fetch('/api/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          data: query,
+          metadata: {
+            title: query,
+            source: googleSearchUrl,
+            type: 'search_query',
+            created_from_search: true
+          },
+        }),
+      });
+
+      if (response.ok) {
+        const newEntry = await response.json();
+        router.push(`/entry/${newEntry.id}`);
+      } else {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create entry');
+      }
+    } catch (error: any) {
+      console.error('Error creating entry from search:', error);
+      alert('Failed to create entry. Please try again.');
+    } finally {
+      setCreatingEntry(false);
     }
   };
 
@@ -233,9 +272,21 @@ export default function SearchPage() {
       
       {results.length === 0 && query && !loading && hasSearched && (
         <Card>
-          <CardContent className="text-center py-8">
+          <CardContent className="text-center py-8 space-y-4">
             <div className="text-gray-500">
               No results found for "{query}". Try a different search term or search mode.
+            </div>
+            <div>
+              <button
+                onClick={handleCreateEntryFromSearch}
+                disabled={creatingEntry}
+                className="text-blue-600 hover:text-blue-800 underline text-sm transition-colors"
+              >
+                {creatingEntry ? 'Creating entry...' : `Create an entry for "${query}"`}
+              </button>
+            </div>
+            <div className="text-xs text-gray-400">
+              This will create a new entry with your search query and link to Google search results
             </div>
           </CardContent>
         </Card>
