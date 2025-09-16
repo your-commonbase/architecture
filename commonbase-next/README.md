@@ -2,6 +2,17 @@
 
 A modern knowledge management system built with Next.js that combines semantic search, AI-powered content synthesis, and intelligent linking to help you build and explore your personal knowledge base.
 
+## Images
+
+<img width="3308" height="5090" alt="screencapture-localhost-3000-entry-00102190-e0e1-4e29-bf98-a9464775402c-2025-09-14-11_35_16" src="https://github.com/user-attachments/assets/ac5cb195-d703-4074-b301-2d429976e37b" />
+<img width="3308" height="2706" alt="screencapture-localhost-3000-entry-6efcb247-fcf0-43ba-b81b-05a0782cc443-2025-09-14-11_34_49" src="https://github.com/user-attachments/assets/4ad86ee9-34d0-4840-8ea3-681fa5142b32" />
+<img width="3308" height="4590" alt="screencapture-localhost-3000-share-2025-09-14-11_30_49" src="https://github.com/user-attachments/assets/1103dfb2-45d5-429d-99ca-9eb3be014620" />
+<img width="3308" height="2442" alt="screencapture-localhost-3000-graph-2025-09-14-11_28_48" src="https://github.com/user-attachments/assets/8a86ec2f-3286-499d-9332-49a14e045d74" />
+<img width="3308" height="2442" alt="screencapture-localhost-3000-search-2025-09-14-11_27_25" src="https://github.com/user-attachments/assets/a402c395-2951-4964-b65e-05aca58976a3" />
+<img width="3308" height="3026" alt="screencapture-localhost-3000-ledger-2025-09-14-11_26_24" src="https://github.com/user-attachments/assets/602fb6d6-0fee-4387-ad23-ef58d0855b37" />
+<img width="3308" height="3528" alt="screencapture-localhost-3000-2025-09-14-11_25_58" src="https://github.com/user-attachments/assets/613e02c6-0c04-4648-9f05-2c8d8006d50b" />
+
+
 ## ✨ Features
 
 ### 🧠 AI-Powered Intelligence
@@ -81,15 +92,6 @@ A modern knowledge management system built with Next.js that combines semantic s
 - **Add Comments**: Annotate entries with additional context or images
 - **Create Syntheses**: Use the cart system to combine multiple entries into new insights
 
-## Images
-
-<img width="3308" height="5090" alt="screencapture-localhost-3000-entry-00102190-e0e1-4e29-bf98-a9464775402c-2025-09-14-11_35_16" src="https://github.com/user-attachments/assets/ac5cb195-d703-4074-b301-2d429976e37b" />
-<img width="3308" height="2706" alt="screencapture-localhost-3000-entry-6efcb247-fcf0-43ba-b81b-05a0782cc443-2025-09-14-11_34_49" src="https://github.com/user-attachments/assets/4ad86ee9-34d0-4840-8ea3-681fa5142b32" />
-<img width="3308" height="4590" alt="screencapture-localhost-3000-share-2025-09-14-11_30_49" src="https://github.com/user-attachments/assets/1103dfb2-45d5-429d-99ca-9eb3be014620" />
-<img width="3308" height="2442" alt="screencapture-localhost-3000-graph-2025-09-14-11_28_48" src="https://github.com/user-attachments/assets/8a86ec2f-3286-499d-9332-49a14e045d74" />
-<img width="3308" height="2442" alt="screencapture-localhost-3000-search-2025-09-14-11_27_25" src="https://github.com/user-attachments/assets/a402c395-2951-4964-b65e-05aca58976a3" />
-<img width="3308" height="3026" alt="screencapture-localhost-3000-ledger-2025-09-14-11_26_24" src="https://github.com/user-attachments/assets/602fb6d6-0fee-4387-ad23-ef58d0855b37" />
-<img width="3308" height="3528" alt="screencapture-localhost-3000-2025-09-14-11_25_58" src="https://github.com/user-attachments/assets/613e02c6-0c04-4648-9f05-2c8d8006d50b" />
 
 
 ## 🔧 Configuration
