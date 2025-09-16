@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { isAuthEnabled, getAuthInstance } from '@/lib/auth-config'
+import { isAuthEnabled } from '@/lib/simple-auth'
 
 export async function GET() {
   // Only provide debug info if auth is supposed to be enabled
@@ -33,26 +33,18 @@ export async function GET() {
     }
   }
 
-  // Test if auth instance can be created
-  let authInstanceStatus = 'not_tested'
-  let authHandlersAvailable = false
-  try {
-    const authInstance = await getAuthInstance()
-    authInstanceStatus = 'success'
-    authHandlersAvailable = !!(authInstance.handlers && authInstance.handlers.GET)
-  } catch (error) {
-    authInstanceStatus = `failed: ${error}`
-  }
-
   return NextResponse.json({
-    message: 'Authentication debug info',
+    message: 'Custom authentication debug info',
     NODE_ENV: process.env.NODE_ENV,
     authEnabled: true,
+    authSystem: 'Custom GitHub OAuth (NextAuth disabled)',
     environmentVariables: envCheck,
     nextAuthUrlValid,
-    authInstance: {
-      status: authInstanceStatus,
-      handlersAvailable: authHandlersAvailable
+    customAuthEndpoints: {
+      signin: '/api/auth/signin/github',
+      callback: '/api/auth/callback/github',
+      session: '/api/auth/session',
+      signout: '/api/auth/signout'
     },
     // Show first/last chars of critical values for verification
     partialValues: {
@@ -62,13 +54,11 @@ export async function GET() {
         'NOT_SET'
     },
     recommendations: [
-      !envCheck.NEXTAUTH_SECRET && 'Set NEXTAUTH_SECRET (generate with: openssl rand -base64 32)',
+      !envCheck.NEXTAUTH_SECRET && 'Set NEXTAUTH_SECRET (used for JWT signing)',
       !envCheck.NEXTAUTH_URL && 'Set NEXTAUTH_URL to your deployment URL',
       !envCheck.GITHUB_ID && 'Set GITHUB_ID from your GitHub OAuth app',
       !envCheck.GITHUB_SECRET && 'Set GITHUB_SECRET from your GitHub OAuth app',
       !nextAuthUrlValid && 'NEXTAUTH_URL must be a valid URL (https://your-domain.vercel.app)',
-      authInstanceStatus !== 'success' && 'NextAuth instance creation failed',
-      !authHandlersAvailable && 'NextAuth handlers not available',
     ].filter(Boolean)
   })
 }
