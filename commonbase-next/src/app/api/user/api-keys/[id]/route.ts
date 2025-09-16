@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, isAuthEnabled } from '@/lib/auth'
+import { getAuthInstance, isAuthEnabled } from '@/lib/auth'
 import { deleteUserApiKey } from '@/lib/api-keys'
 
 // DELETE - Delete a user's API key
@@ -12,6 +12,7 @@ export async function DELETE(
   }
 
   try {
+    const auth = getAuthInstance().auth
     const session = await auth()
 
     if (!session?.user?.id) {

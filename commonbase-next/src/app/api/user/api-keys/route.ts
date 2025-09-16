@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, isAuthEnabled } from '@/lib/auth'
+import { getAuthInstance, isAuthEnabled } from '@/lib/auth'
 import { createUserApiKey, getUserApiKeys } from '@/lib/api-keys'
 
 // GET - List user's API keys
@@ -9,6 +9,7 @@ export async function GET() {
   }
 
   try {
+    const auth = getAuthInstance().auth
     const session = await auth()
 
     if (!session?.user?.id) {
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const auth = getAuthInstance().auth
     const session = await auth()
 
     if (!session?.user?.id) {

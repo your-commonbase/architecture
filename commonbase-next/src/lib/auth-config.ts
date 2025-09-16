@@ -8,23 +8,31 @@ export const isAuthEnabled = () => {
   )
 }
 
-// Conditional imports and configuration
-let authOptions: any = null
-let handlers: any = { GET: null, POST: null }
-let auth: any = () => Promise.resolve(null)
-let signIn: any = () => Promise.resolve()
-let signOut: any = () => Promise.resolve()
+// Lazy-loaded auth instance
+let cachedAuthInstance: any = null
 
-// Only import and configure NextAuth if auth is enabled
-if (isAuthEnabled()) {
+export function getAuthInstance() {
+  if (!isAuthEnabled()) {
+    return {
+      authOptions: null,
+      handlers: { GET: null, POST: null },
+      auth: () => Promise.resolve(null),
+      signIn: () => Promise.resolve(),
+      signOut: () => Promise.resolve()
+    }
+  }
+
+  if (cachedAuthInstance) {
+    return cachedAuthInstance
+  }
+
   try {
-    // Dynamic imports that only happen in production when auth is enabled
     const NextAuth = require('next-auth').default
     const GitHub = require('next-auth/providers/github').default
     const { DrizzleAdapter } = require('@auth/drizzle-adapter')
     const { db } = require('@/lib/db')
 
-    authOptions = {
+    const authOptions = {
       adapter: DrizzleAdapter(db),
       providers: [
         GitHub({
@@ -41,7 +49,9 @@ if (isAuthEnabled()) {
           return true
         },
         async session({ session, user }: any) {
-          session.user.id = user.id
+          if (user?.id) {
+            session.user.id = user.id
+          }
           return session
         },
       },
@@ -49,23 +59,36 @@ if (isAuthEnabled()) {
         signIn: '/auth/signin',
         error: '/auth/error',
       },
-      debug: false, // Disable debug in production
+      debug: false,
     }
 
     const authInstance = NextAuth(authOptions)
 
-    if (authInstance && authInstance.handlers) {
-      handlers = authInstance.handlers
-      auth = authInstance.auth
-      signIn = authInstance.signIn
-      signOut = authInstance.signOut
-    } else {
-      console.error('NextAuth instance creation failed')
+    cachedAuthInstance = {
+      authOptions,
+      handlers: authInstance.handlers || { GET: null, POST: null },
+      auth: authInstance.auth || (() => Promise.resolve(null)),
+      signIn: authInstance.signIn || (() => Promise.resolve()),
+      signOut: authInstance.signOut || (() => Promise.resolve())
     }
+
+    return cachedAuthInstance
   } catch (error) {
     console.error('Failed to initialize NextAuth:', error)
-    // Keep the stub functions
+    cachedAuthInstance = {
+      authOptions: null,
+      handlers: { GET: null, POST: null },
+      auth: () => Promise.resolve(null),
+      signIn: () => Promise.resolve(),
+      signOut: () => Promise.resolve()
+    }
+    return cachedAuthInstance
   }
 }
 
-export { authOptions, handlers, auth, signIn, signOut }
+// Export lazy-loaded values
+export const authOptions = () => getAuthInstance().authOptions
+export const handlers = () => getAuthInstance().handlers
+export const auth = () => getAuthInstance().auth()
+export const signIn = () => getAuthInstance().signIn()
+export const signOut = () => getAuthInstance().signOut()

@@ -1,6 +1,7 @@
 // Re-export everything from the new auth config
 export {
   isAuthEnabled,
+  getAuthInstance,
   authOptions,
   handlers,
   auth,

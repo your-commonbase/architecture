@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, isAuthEnabled } from '@/lib/auth'
+import { getAuthInstance, isAuthEnabled } from '@/lib/auth'
 
 export default async function middleware(request: NextRequest) {
   // Skip all middleware if auth is not enabled (local development)
@@ -24,6 +24,7 @@ export default async function middleware(request: NextRequest) {
 
     // Check for valid session
     try {
+      const auth = getAuthInstance().auth
       const session = await auth()
       if (session?.user) {
         return NextResponse.next()
@@ -42,6 +43,7 @@ export default async function middleware(request: NextRequest) {
   // Protect web pages (redirect to sign-in)
   if (pathname !== '/auth/signin' && pathname !== '/auth/error') {
     try {
+      const auth = getAuthInstance().auth
       const session = await auth()
       if (!session?.user) {
         const signInUrl = new URL('/auth/signin', request.url)
