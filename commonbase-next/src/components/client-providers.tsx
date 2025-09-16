@@ -2,14 +2,14 @@
 
 import { KeyboardShortcuts } from './keyboard-shortcuts';
 import { SessionProvider } from 'next-auth/react';
-
-// Check if auth is enabled on client side
-const isAuthEnabled = () => {
-  return typeof window !== 'undefined' && process.env.NODE_ENV === 'production'
-}
+import { AuthGuard } from './auth-guard';
+import { usePathname } from 'next/navigation';
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
-  const authEnabled = isAuthEnabled()
+  const pathname = usePathname()
+
+  // Don't wrap auth pages with AuthGuard
+  const isAuthPage = pathname?.startsWith('/auth/')
 
   const content = (
     <>
@@ -18,14 +18,15 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
     </>
   )
 
-  // Wrap with SessionProvider only if auth is enabled
-  if (authEnabled) {
-    return (
-      <SessionProvider>
-        {content}
-      </SessionProvider>
-    )
-  }
+  const protectedContent = isAuthPage ? content : (
+    <AuthGuard>
+      {content}
+    </AuthGuard>
+  )
 
-  return content
+  return (
+    <SessionProvider>
+      {protectedContent}
+    </SessionProvider>
+  )
 }

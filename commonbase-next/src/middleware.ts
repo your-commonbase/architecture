@@ -1,61 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getToken } from 'next-auth/jwt'
-import { isAuthEnabled } from '@/auth'
 
-export default async function middleware(request: NextRequest) {
-  // Skip all middleware if auth is not enabled (local development)
-  if (!isAuthEnabled()) {
+export default function middleware(request: NextRequest) {
+  // In local development, always allow access
+  if (process.env.NODE_ENV !== 'production') {
     return NextResponse.next()
   }
 
-  const { pathname } = request.nextUrl
+  // Check if auth is configured
+  const isAuthConfigured = !!(
+    process.env.NEXTAUTH_SECRET &&
+    process.env.GITHUB_CLIENT_ID &&
+    process.env.GITHUB_CLIENT_SECRET
+  )
 
-  // Don't protect auth routes
-  if (pathname.startsWith('/api/auth/')) {
+  // If auth is not configured in production, allow access (fallback)
+  if (!isAuthConfigured) {
     return NextResponse.next()
   }
 
-  // Protect API routes
-  if (pathname.startsWith('/api/')) {
-    // Check for API key
-    const apiKey = request.headers.get('x-api-key')
-    if (apiKey && apiKey === process.env.API_KEY) {
-      return NextResponse.next()
-    }
-
-    // Check for valid session
-    try {
-      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-      if (token?.sub) {
-        return NextResponse.next()
-      }
-    } catch (error) {
-      console.error('Middleware auth error:', error)
-    }
-
-    // No valid auth found
-    return NextResponse.json(
-      { error: 'Authentication required. Provide x-api-key header or sign in.' },
-      { status: 401 }
-    )
+  // Always allow auth routes
+  if (request.nextUrl.pathname.startsWith('/api/auth/')) {
+    return NextResponse.next()
   }
 
-  // Protect web pages (redirect to sign-in)
-  if (pathname !== '/auth/signin' && pathname !== '/auth/error') {
-    try {
-      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
-      if (!token?.sub) {
-        const signInUrl = new URL('/auth/signin', request.url)
-        signInUrl.searchParams.set('callbackUrl', pathname)
-        return NextResponse.redirect(signInUrl)
-      }
-    } catch (error) {
-      console.error('Middleware session error:', error)
-      const signInUrl = new URL('/auth/signin', request.url)
-      return NextResponse.redirect(signInUrl)
-    }
+  // Always allow debug route
+  if (request.nextUrl.pathname === '/api/auth-debug') {
+    return NextResponse.next()
   }
 
+  // For all other routes, let NextAuth and individual route handlers
+  // handle authentication. This minimal middleware just ensures
+  // we don't interfere with the auth flow.
   return NextResponse.next()
 }
 

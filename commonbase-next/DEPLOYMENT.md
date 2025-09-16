@@ -194,8 +194,19 @@ Visit `https://your-app.vercel.app/api/auth-debug` to verify:
 
 If this doesn't work, check:
 - GitHub OAuth callback URL matches exactly (including `https://`)
-- All AUTH_* environment variables are set in Vercel
+- All environment variables are set in Vercel:
+  - `NEXTAUTH_SECRET`
+  - `GITHUB_CLIENT_ID`
+  - `GITHUB_CLIENT_SECRET`
+  - `NEXTAUTH_URL`
 - ALLOWED_USERS includes your GitHub email (if using user restrictions)
+
+### 6.3 Troubleshooting Middleware Issues
+If you see "MIDDLEWARE_INVOCATION_FAILED" errors:
+- The middleware has been optimized for Edge Runtime compatibility
+- It only handles basic routing and lets individual routes handle authentication
+- Check the browser console for any client-side JavaScript errors
+- Verify that all environment variables are properly set
 
 ## Step 7: Testing Your Deployment
 
