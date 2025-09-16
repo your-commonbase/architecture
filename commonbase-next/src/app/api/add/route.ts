@@ -4,16 +4,26 @@ import { commonbase, embeddings } from '@/lib/db/schema';
 import { generateEmbedding } from '@/lib/embeddings';
 import { eq } from 'drizzle-orm';
 import { isDemoMode, getDemoModeError } from '@/lib/demo-mode';
+import { validateApiRequest } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   try {
     // Check if demo mode is enabled
     if (isDemoMode()) {
       const error = getDemoModeError();
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: error.message,
-        action: error.action 
+        action: error.action
       }, { status: 403 });
+    }
+
+    // Validate authentication and get user info
+    const authResult = await validateApiRequest(request);
+    if (!authResult.isValid) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
@@ -43,12 +53,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Enhance metadata with user information if available
+    const enhancedMetadata = { ...metadata };
+    if (authResult.user) {
+      enhancedMetadata.userId = authResult.user.id;
+      enhancedMetadata.username = authResult.user.name || authResult.user.email;
+      enhancedMetadata.createdBy = authResult.user.name || authResult.user.email;
+    }
+
     // Create new entry with provided or generated ID
     const entryValues: { data: string; metadata: any; id?: string } = {
       data,
-      metadata,
+      metadata: enhancedMetadata,
     };
-    
+
     if (id) {
       entryValues.id = id;
     }

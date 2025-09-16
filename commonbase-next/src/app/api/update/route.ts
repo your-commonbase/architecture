@@ -4,6 +4,7 @@ import { commonbase, embeddings } from '@/lib/db/schema';
 import { generateEmbedding } from '@/lib/embeddings';
 import { eq } from 'drizzle-orm';
 import { isDemoMode } from '@/lib/demo-mode';
+import { validateApiRequest } from '@/lib/api-auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Edit functionality is disabled in demo mode. Deploy your own instance at https://github.com/your-commonbase/commonbase' },
         { status: 403 }
+      );
+    }
+
+    // Validate authentication and get user info
+    const authResult = await validateApiRequest(request);
+    if (!authResult.isValid) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: 401 }
       );
     }
 
@@ -51,9 +61,17 @@ export async function POST(request: NextRequest) {
 
     // Update metadata partially
     if (metadata !== null) {
+      const enhancedMetadata = { ...metadata };
+
+      // Add updater information if user is available
+      if (authResult.user) {
+        enhancedMetadata.lastUpdatedBy = authResult.user.name || authResult.user.email;
+        enhancedMetadata.lastUpdatedUserId = authResult.user.id;
+      }
+
       updates.metadata = {
         ...existingEntry.metadata,
-        ...metadata,
+        ...enhancedMetadata,
       };
     }
 

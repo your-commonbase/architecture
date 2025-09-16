@@ -1,0 +1,10 @@
+{
+  "env": {
+    "NEXT_PUBLIC_AUTH_ENABLED": "true"
+  },
+  "build": {
+    "env": {
+      "NEXT_PUBLIC_AUTH_ENABLED": "true"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, json, timestamp, customType } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, json, timestamp, customType, primaryKey, integer } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // Custom vector type for pgvector
@@ -41,3 +41,71 @@ export type CommonbaseEntry = typeof commonbase.$inferSelect;
 export type NewCommonbaseEntry = typeof commonbase.$inferInsert;
 export type Embedding = typeof embeddings.$inferSelect;
 export type NewEmbedding = typeof embeddings.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type UserApiKey = typeof userApiKeys.$inferSelect;
+export type NewUserApiKey = typeof userApiKeys.$inferInsert;
+
+// NextAuth.js tables (only created when auth is enabled)
+export const users = pgTable("user", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name"),
+  email: text("email").notNull(),
+  emailVerified: timestamp("emailVerified"),
+  image: text("image"),
+});
+
+export const accounts = pgTable(
+  "account",
+  {
+    userId: uuid("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (account) => ({
+    compoundKey: primaryKey({
+      columns: [account.provider, account.providerAccountId],
+    }),
+  })
+);
+
+export const sessions = pgTable("session", {
+  sessionToken: text("sessionToken").notNull().primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires").notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verificationToken",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires").notNull(),
+  },
+  (vt) => ({
+    compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
+  })
+);
+
+// User API keys table for user-specific API access
+export const userApiKeys = pgTable("userApiKey", {
+  id: uuid("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(), // User-friendly name for the key
+  keyHash: text("keyHash").notNull().unique(), // Hashed version of the API key
+  created: timestamp("created").defaultNow().notNull(),
+  lastUsed: timestamp("lastUsed"),
+});
