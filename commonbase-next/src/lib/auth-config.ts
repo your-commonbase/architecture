@@ -8,29 +8,17 @@ export const isAuthEnabled = () => {
   )
 }
 
-// Lazy-loaded auth instance
-let cachedAuthInstance: any = null
-
-export function getAuthInstance() {
+// Create NextAuth configuration
+export async function createAuthConfig() {
   if (!isAuthEnabled()) {
-    return {
-      authOptions: null,
-      handlers: { GET: null, POST: null },
-      auth: () => Promise.resolve(null),
-      signIn: () => Promise.resolve(),
-      signOut: () => Promise.resolve()
-    }
-  }
-
-  if (cachedAuthInstance) {
-    return cachedAuthInstance
+    return null
   }
 
   try {
-    const NextAuth = require('next-auth').default
-    const GitHub = require('next-auth/providers/github').default
-    const { DrizzleAdapter } = require('@auth/drizzle-adapter')
-    const { db } = require('@/lib/db')
+    const { default: NextAuth } = await import('next-auth')
+    const { default: GitHub } = await import('next-auth/providers/github')
+    const { DrizzleAdapter } = await import('@auth/drizzle-adapter')
+    const { db } = await import('@/lib/db')
 
     const authOptions = {
       adapter: DrizzleAdapter(db),
@@ -62,33 +50,70 @@ export function getAuthInstance() {
       debug: false,
     }
 
-    const authInstance = NextAuth(authOptions)
-
-    cachedAuthInstance = {
-      authOptions,
-      handlers: authInstance.handlers || { GET: null, POST: null },
-      auth: authInstance.auth || (() => Promise.resolve(null)),
-      signIn: authInstance.signIn || (() => Promise.resolve()),
-      signOut: authInstance.signOut || (() => Promise.resolve())
-    }
-
-    return cachedAuthInstance
+    return NextAuth(authOptions)
   } catch (error) {
-    console.error('Failed to initialize NextAuth:', error)
-    cachedAuthInstance = {
-      authOptions: null,
+    console.error('Failed to create NextAuth config:', error)
+    return null
+  }
+}
+
+// Lazy-loaded auth instance with proper async handling
+let authPromise: Promise<any> | null = null
+
+export async function getAuthInstance() {
+  if (!isAuthEnabled()) {
+    return {
       handlers: { GET: null, POST: null },
       auth: () => Promise.resolve(null),
       signIn: () => Promise.resolve(),
       signOut: () => Promise.resolve()
     }
-    return cachedAuthInstance
+  }
+
+  if (!authPromise) {
+    authPromise = createAuthConfig()
+  }
+
+  try {
+    const authInstance = await authPromise
+    if (authInstance && authInstance.handlers) {
+      return {
+        handlers: authInstance.handlers,
+        auth: authInstance.auth,
+        signIn: authInstance.signIn,
+        signOut: authInstance.signOut
+      }
+    }
+  } catch (error) {
+    console.error('Failed to get auth instance:', error)
+  }
+
+  // Fallback
+  return {
+    handlers: { GET: null, POST: null },
+    auth: () => Promise.resolve(null),
+    signIn: () => Promise.resolve(),
+    signOut: () => Promise.resolve()
   }
 }
 
-// Export lazy-loaded values
-export const authOptions = () => getAuthInstance().authOptions
-export const handlers = () => getAuthInstance().handlers
-export const auth = () => getAuthInstance().auth()
-export const signIn = () => getAuthInstance().signIn()
-export const signOut = () => getAuthInstance().signOut()
+// Export functions that create instances on demand
+export const authOptions = async () => {
+  const instance = await getAuthInstance()
+  return instance
+}
+
+export const auth = async () => {
+  const instance = await getAuthInstance()
+  return instance.auth()
+}
+
+export const signIn = async () => {
+  const instance = await getAuthInstance()
+  return instance.signIn()
+}
+
+export const signOut = async () => {
+  const instance = await getAuthInstance()
+  return instance.signOut()
+}

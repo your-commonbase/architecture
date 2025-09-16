@@ -41,8 +41,8 @@ export async function validateApiRequest(request: NextRequest): Promise<{
 
   // Check for valid session (for web app requests)
   try {
-    const auth = getAuthInstance().auth
-    const session = await auth()
+    const authInstance = await getAuthInstance()
+    const session = await authInstance.auth()
     if (session?.user) {
       return { isValid: true, user: session.user }
     }

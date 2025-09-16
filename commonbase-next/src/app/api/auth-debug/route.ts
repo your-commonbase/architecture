@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { isAuthEnabled } from '@/lib/auth'
+import { isAuthEnabled, getAuthInstance } from '@/lib/auth-config'
 
 export async function GET() {
   // Only provide debug info if auth is supposed to be enabled
@@ -33,12 +33,27 @@ export async function GET() {
     }
   }
 
+  // Test if auth instance can be created
+  let authInstanceStatus = 'not_tested'
+  let authHandlersAvailable = false
+  try {
+    const authInstance = await getAuthInstance()
+    authInstanceStatus = 'success'
+    authHandlersAvailable = !!(authInstance.handlers && authInstance.handlers.GET)
+  } catch (error) {
+    authInstanceStatus = `failed: ${error}`
+  }
+
   return NextResponse.json({
     message: 'Authentication debug info',
     NODE_ENV: process.env.NODE_ENV,
     authEnabled: true,
     environmentVariables: envCheck,
     nextAuthUrlValid,
+    authInstance: {
+      status: authInstanceStatus,
+      handlersAvailable: authHandlersAvailable
+    },
     // Show first/last chars of critical values for verification
     partialValues: {
       NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'NOT_SET',
@@ -52,6 +67,8 @@ export async function GET() {
       !envCheck.GITHUB_ID && 'Set GITHUB_ID from your GitHub OAuth app',
       !envCheck.GITHUB_SECRET && 'Set GITHUB_SECRET from your GitHub OAuth app',
       !nextAuthUrlValid && 'NEXTAUTH_URL must be a valid URL (https://your-domain.vercel.app)',
+      authInstanceStatus !== 'success' && 'NextAuth instance creation failed',
+      !authHandlersAvailable && 'NextAuth handlers not available',
     ].filter(Boolean)
   })
 }

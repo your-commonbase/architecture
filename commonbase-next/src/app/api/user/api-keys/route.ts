@@ -9,8 +9,8 @@ export async function GET() {
   }
 
   try {
-    const auth = getAuthInstance().auth
-    const session = await auth()
+    const authInstance = await getAuthInstance()
+    const session = await authInstance.auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -34,8 +34,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const auth = getAuthInstance().auth
-    const session = await auth()
+    const authInstance = await getAuthInstance()
+    const session = await authInstance.auth()
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
