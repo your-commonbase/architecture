@@ -49,6 +49,8 @@ DISABLE_ADD=false
 
 Make sure to replace `[your-key]` with your actual OpenAI API key.
 
+**Note**: Authentication is disabled in local development. For production deployment with authentication, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
 ## Step 4: Install Dependencies
 
 ```bash

@@ -39,6 +39,7 @@ A modern knowledge management system built with Next.js that combines semantic s
 - Node.js 18+
 - PostgreSQL with pgvector extension
 - OpenAI API key
+- GitHub OAuth app (for production authentication)
 
 ### Installation
 
@@ -102,7 +103,8 @@ Key configuration files:
 
 ## 📚 Documentation
 
-- [GETTING_STARTED.md](./GETTING_STARTED.md) - Complete setup guide
+- [GETTING_STARTED.md](./GETTING_STARTED.md) - Local development setup
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Production deployment with authentication
 - [CLAUDE.md](./CLAUDE.md) - Development context for AI assistants
 
 ## 🤝 Contributing

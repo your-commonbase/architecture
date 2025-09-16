@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, isAuthEnabled } from '@/auth'
+import { getToken } from 'next-auth/jwt'
+import { isAuthEnabled } from '@/auth'
 
 export default async function middleware(request: NextRequest) {
   // Skip all middleware if auth is not enabled (local development)
@@ -24,8 +25,8 @@ export default async function middleware(request: NextRequest) {
 
     // Check for valid session
     try {
-      const session = await auth()
-      if (session?.user) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+      if (token?.sub) {
         return NextResponse.next()
       }
     } catch (error) {
@@ -42,8 +43,8 @@ export default async function middleware(request: NextRequest) {
   // Protect web pages (redirect to sign-in)
   if (pathname !== '/auth/signin' && pathname !== '/auth/error') {
     try {
-      const session = await auth()
-      if (!session?.user) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET })
+      if (!token?.sub) {
         const signInUrl = new URL('/auth/signin', request.url)
         signInUrl.searchParams.set('callbackUrl', pathname)
         return NextResponse.redirect(signInUrl)

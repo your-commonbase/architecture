@@ -1,12 +1,13 @@
 # CommonBase Deployment Guide
 
-This guide covers deploying your CommonBase application to Vercel with a free PostgreSQL database.
+This guide covers deploying your CommonBase application to Vercel with authentication and a PostgreSQL database.
 
 ## Prerequisites
 
 - GitHub account
 - Vercel account (free tier)
 - OpenAI API key for embeddings
+- GitHub OAuth app (for production authentication)
 
 ## Database Options (Free Tier)
 
@@ -25,7 +26,24 @@ This guide covers deploying your CommonBase application to Vercel with a free Po
 - **PostgreSQL** with extensions
 - **Simple deployment**
 
-## Step 1: Prepare Your Database
+## Step 1: GitHub OAuth Setup (Required for Production)
+
+### 1.1 Create GitHub OAuth App
+1. **Go to GitHub Settings**: [Developer settings > OAuth Apps](https://github.com/settings/applications/new)
+2. **Register Application**:
+   - **Application name**: Commonbase
+   - **Homepage URL**: `https://your-deployment-url.vercel.app` (you'll update this after deployment)
+   - **Authorization callback URL**: `https://your-deployment-url.vercel.app/api/auth/callback/github`
+3. **Save Credentials**: Copy the **Client ID** and generate a **Client Secret**
+
+### 1.2 Generate Auth Secret
+Run this command to generate a secure authentication secret:
+```bash
+openssl rand -base64 32
+```
+Save this output - you'll need it for the `AUTH_SECRET` environment variable.
+
+## Step 2: Prepare Your Database
 
 ### Using Neon (Recommended)
 
@@ -50,7 +68,7 @@ This guide covers deploying your CommonBase application to Vercel with a free Po
    - Go to Settings → Database
    - Copy the connection string (URI format)
 
-## Step 2: Set Up Your Repository
+## Step 3: Set Up Your Repository
 
 1. **Push to GitHub**:
    ```bash
@@ -65,15 +83,27 @@ This guide covers deploying your CommonBase application to Vercel with a free Po
    # Database
    DATABASE_URL="postgresql://username:password@host:port/database?sslmode=require"
    DATABASE_NAME="your_database_name"
-   
+
    # OpenAI (required for embeddings)
    OPENAI_API_KEY="your_openai_api_key"
-   
+
+   # Authentication (required for production)
+   NEXTAUTH_SECRET="your-generated-secret-from-step-1.2"
+   GITHUB_CLIENT_ID="your-github-client-id"
+   GITHUB_CLIENT_SECRET="your-github-client-secret"
+   NEXTAUTH_URL="https://your-deployment-url.vercel.app"
+
+   # User Access Control (optional)
+   ALLOWED_USERS="user1@example.com,user2@example.com"
+
    # Demo Mode (optional)
    DISABLE_ADD="false"
+
+   # API Access (optional)
+   API_KEY="your-secure-api-key-for-programmatic-access"
    ```
 
-## Step 3: Deploy to Vercel
+## Step 4: Deploy to Vercel
 
 ### Initial Setup
 
@@ -84,11 +114,16 @@ This guide covers deploying your CommonBase application to Vercel with a free Po
 
 2. **Configure Environment Variables**:
    - In project settings, go to "Environment Variables"
-   - Add all variables from your `.env.local`:
+   - Add all variables from your `.env.example`:
      ```
      DATABASE_URL=postgresql://your_connection_string
      DATABASE_NAME=your_database_name
      OPENAI_API_KEY=your_openai_api_key
+     NEXTAUTH_SECRET=your-generated-secret
+     GITHUB_CLIENT_ID=your-github-client-id
+     GITHUB_CLIENT_SECRET=your-github-client-secret
+     NEXTAUTH_URL=https://your-app-name.vercel.app
+     ALLOWED_USERS=your-email@example.com
      DISABLE_ADD=false
      ```
 
@@ -118,7 +153,16 @@ This guide covers deploying your CommonBase application to Vercel with a free Po
    - Connect to your database using the provider's console
    - Run the SQL from `src/lib/db/schema.ts` manually
 
-## Step 4: Configure Domain (Optional)
+### Update GitHub OAuth App
+After deployment, update your GitHub OAuth application:
+1. **Get your Vercel URL**: Copy the deployment URL from Vercel dashboard
+2. **Update GitHub OAuth app**:
+   - Go back to [GitHub OAuth Apps settings](https://github.com/settings/developers)
+   - Click on your Commonbase app
+   - Update **Homepage URL** to: `https://your-actual-vercel-url.vercel.app`
+   - Update **Authorization callback URL** to: `https://your-actual-vercel-url.vercel.app/api/auth/callback/github`
+
+## Step 5: Configure Domain (Optional)
 
 1. **Custom Domain**:
    - Go to your Vercel project → Settings → Domains
@@ -132,7 +176,28 @@ This guide covers deploying your CommonBase application to Vercel with a free Po
    # Enter: true
    ```
 
-## Step 5: Testing Your Deployment
+## Step 6: Verify Authentication Setup
+
+### 6.1 Check Authentication Debug
+Visit `https://your-app.vercel.app/api/auth-debug` to verify:
+- `authEnabled` should be `true`
+- `NODE_ENV` should be `production`
+- All required environment variables should show as `true`
+- You should see recommendations if anything is missing
+
+### 6.2 Test Authentication Flow
+1. **Visit your app**: Go to `https://your-app.vercel.app`
+2. **Should redirect**: You should be automatically redirected to `/auth/signin`
+3. **Test GitHub OAuth**: Click "Continue with GitHub"
+4. **Grant permissions**: Authorize the app if prompted
+5. **Should redirect back**: You should return to the main app
+
+If this doesn't work, check:
+- GitHub OAuth callback URL matches exactly (including `https://`)
+- All AUTH_* environment variables are set in Vercel
+- ALLOWED_USERS includes your GitHub email (if using user restrictions)
+
+## Step 7: Testing Your Deployment
 
 1. **Check Health**:
    - Visit `https://your-app.vercel.app`

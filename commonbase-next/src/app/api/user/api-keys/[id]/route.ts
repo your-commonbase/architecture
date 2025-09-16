@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, isAuthEnabled } from '@/auth'
+import { getServerSession } from 'next-auth/next'
+import { authOptions, isAuthEnabled } from '@/auth'
 import { deleteUserApiKey } from '@/lib/api-keys'
 
 // DELETE - Delete a user's API key
@@ -12,7 +13,7 @@ export async function DELETE(
   }
 
   try {
-    const session = await auth()
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -1,5 +1,5 @@
-import NextAuth from "next-auth"
-import GitHub from "next-auth/providers/github"
+import NextAuth, { NextAuthOptions } from "next-auth"
+import GithubProvider from "next-auth/providers/github"
 import { DrizzleAdapter } from "@auth/drizzle-adapter"
 import { db } from "@/lib/db"
 
@@ -7,18 +7,18 @@ import { db } from "@/lib/db"
 export const isAuthEnabled = () => {
   return (
     process.env.NODE_ENV === 'production' &&
-    process.env.AUTH_SECRET &&
-    process.env.AUTH_GITHUB_ID &&
-    process.env.AUTH_GITHUB_SECRET
+    process.env.NEXTAUTH_SECRET &&
+    process.env.GITHUB_CLIENT_ID &&
+    process.env.GITHUB_CLIENT_SECRET
   )
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const authOptions: NextAuthOptions = {
   adapter: DrizzleAdapter(db),
   providers: [
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID!,
-      clientSecret: process.env.AUTH_GITHUB_SECRET!,
+    GithubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
@@ -32,7 +32,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true
     },
     async session({ session, user }) {
-      if (user?.id) {
+      if (session.user) {
         session.user.id = user.id
       }
       return session
@@ -43,4 +43,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     error: '/auth/error',
   },
   debug: process.env.NODE_ENV === 'development',
-})
+}
+
+export default NextAuth(authOptions)

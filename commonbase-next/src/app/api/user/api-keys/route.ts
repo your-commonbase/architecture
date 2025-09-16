@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, isAuthEnabled } from '@/auth'
+import { getServerSession } from 'next-auth/next'
+import { authOptions, isAuthEnabled } from '@/auth'
 import { createUserApiKey, getUserApiKeys } from '@/lib/api-keys'
 
 // GET - List user's API keys
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const session = await auth()
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -33,7 +34,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const session = await auth()
+    const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
