@@ -61,6 +61,12 @@ export async function POST(request: NextRequest) {
       enhancedMetadata.createdBy = authResult.user.name || authResult.user.email;
     }
 
+    if (link) {
+      enhancedMetadata.links = Array.isArray(enhancedMetadata.links)
+        ? [...new Set([...enhancedMetadata.links, link])]
+        : [link];
+    }
+
     // Create new entry with provided or generated ID
     const entryValues: { data: string; metadata: any; id?: string } = {
       data,
