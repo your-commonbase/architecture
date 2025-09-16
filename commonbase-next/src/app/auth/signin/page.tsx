@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Github } from 'lucide-react'
@@ -15,7 +14,9 @@ function SignInContent() {
   const handleSignIn = async () => {
     setLoading(true)
     try {
-      await signIn('github', { callbackUrl })
+      // Direct redirect to NextAuth GitHub provider instead of using React hooks
+      const authUrl = `/api/auth/signin/github?callbackUrl=${encodeURIComponent(callbackUrl)}`
+      window.location.href = authUrl
     } catch (error) {
       console.error('Sign in error:', error)
       setLoading(false)

@@ -15,32 +15,56 @@ export async function createAuthConfig() {
   }
 
   try {
-    const { default: NextAuth } = await import('next-auth')
-    const { default: GitHub } = await import('next-auth/providers/github')
-    const { DrizzleAdapter } = await import('@auth/drizzle-adapter')
-    const { db } = await import('@/lib/db')
+    console.log('Creating NextAuth config...')
+    console.log('Environment check:', {
+      GITHUB_ID: !!process.env.GITHUB_ID,
+      GITHUB_SECRET: !!process.env.GITHUB_SECRET,
+      NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET,
+      NEXTAUTH_URL: !!process.env.NEXTAUTH_URL
+    })
 
+    const { default: NextAuth } = await import('next-auth')
+    console.log('NextAuth imported successfully')
+
+    const { default: GitHub } = await import('next-auth/providers/github')
+    console.log('GitHub provider imported successfully')
+
+    // Validate environment variables before using them
+    if (!process.env.GITHUB_ID || !process.env.GITHUB_SECRET) {
+      throw new Error('Missing GITHUB_ID or GITHUB_SECRET environment variables')
+    }
+
+    // Simple configuration without Drizzle adapter to avoid slice error
     const authOptions = {
-      adapter: DrizzleAdapter(db),
       providers: [
         GitHub({
-          clientId: process.env.GITHUB_ID!,
-          clientSecret: process.env.GITHUB_SECRET!,
+          clientId: process.env.GITHUB_ID,
+          clientSecret: process.env.GITHUB_SECRET,
         }),
       ],
       callbacks: {
         async signIn({ user, account, profile }: any) {
-          const allowedUsers = process.env.ALLOWED_USERS?.split(',') || []
-          if (allowedUsers.length > 0 && !allowedUsers.includes(user.email || '')) {
+          try {
+            const allowedUsers = process.env.ALLOWED_USERS?.split(',') || []
+            if (allowedUsers.length > 0 && !allowedUsers.includes(user.email || '')) {
+              return false
+            }
+            return true
+          } catch (error) {
+            console.error('SignIn callback error:', error)
             return false
           }
-          return true
         },
         async session({ session, user }: any) {
-          if (user?.id) {
-            session.user.id = user.id
+          try {
+            if (user?.id) {
+              session.user.id = user.id
+            }
+            return session
+          } catch (error) {
+            console.error('Session callback error:', error)
+            return session
           }
-          return session
         },
       },
       pages: {
@@ -50,9 +74,14 @@ export async function createAuthConfig() {
       debug: false,
     }
 
-    return NextAuth(authOptions)
+    console.log('Creating NextAuth instance...')
+    const authInstance = NextAuth(authOptions)
+    console.log('NextAuth instance created successfully')
+
+    return authInstance
   } catch (error) {
     console.error('Failed to create NextAuth config:', error)
+    console.error('Error details:', error instanceof Error ? error.stack : error)
     return null
   }
 }
