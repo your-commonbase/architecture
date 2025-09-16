@@ -149,9 +149,95 @@ Save this output - you'll need it for the `AUTH_SECRET` environment variable.
    npx drizzle-kit push:pg --config=drizzle.config.ts
    ```
 
-2. **Alternative: Manual Migration**:
-   - Connect to your database using the provider's console
-   - Run the SQL from `src/lib/db/schema.ts` manually
+2. **Manual Migration (REQUIRED for Authentication)**:
+
+⚠️ **CRITICAL**: Authentication tables don't exist by default in production. You MUST create them manually.
+
+**Steps to create authentication tables:**
+
+1. **Access your database console**:
+   - **Neon**: Go to your project → SQL Editor
+   - **Supabase**: Go to your project → SQL Editor
+   - **Other**: Use your provider's SQL console
+
+2. **Run the authentication setup SQL**:
+   Copy and run the SQL from `create-auth-tables.sql` file, or use this command:
+
+```sql
+-- Create NextAuth.js authentication tables
+CREATE TABLE IF NOT EXISTS "user" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "name" TEXT,
+  "email" TEXT NOT NULL,
+  "emailVerified" TIMESTAMP,
+  "image" TEXT
+);
+
+CREATE TABLE IF NOT EXISTS "account" (
+  "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "type" TEXT NOT NULL,
+  "provider" TEXT NOT NULL,
+  "providerAccountId" TEXT NOT NULL,
+  "refresh_token" TEXT,
+  "access_token" TEXT,
+  "expires_at" INTEGER,
+  "token_type" TEXT,
+  "scope" TEXT,
+  "id_token" TEXT,
+  "session_state" TEXT,
+  PRIMARY KEY ("provider", "providerAccountId")
+);
+
+CREATE TABLE IF NOT EXISTS "session" (
+  "sessionToken" TEXT PRIMARY KEY NOT NULL,
+  "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "expires" TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "verificationToken" (
+  "identifier" TEXT NOT NULL,
+  "token" TEXT NOT NULL,
+  "expires" TIMESTAMP NOT NULL,
+  PRIMARY KEY ("identifier", "token")
+);
+
+CREATE TABLE IF NOT EXISTS "userApiKey" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "userId" UUID NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+  "name" TEXT NOT NULL,
+  "keyHash" TEXT NOT NULL UNIQUE,
+  "created" TIMESTAMP DEFAULT NOW() NOT NULL,
+  "lastUsed" TIMESTAMP
+);
+
+-- Create main app tables if they don't exist
+CREATE TABLE IF NOT EXISTS "commonbase" (
+  "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  "data" TEXT NOT NULL,
+  "metadata" JSONB DEFAULT '{}',
+  "created" TIMESTAMP DEFAULT NOW() NOT NULL,
+  "updated" TIMESTAMP DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "embeddings" (
+  "id" UUID PRIMARY KEY REFERENCES "commonbase"("id") ON DELETE CASCADE,
+  "embedding" vector(1536) NOT NULL
+);
+
+-- Create performance indexes
+CREATE INDEX IF NOT EXISTS "account_userId_idx" ON "account"("userId");
+CREATE INDEX IF NOT EXISTS "session_userId_idx" ON "session"("userId");
+```
+
+3. **Verify tables exist**: Run this to confirm all tables were created:
+```sql
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'public'
+AND table_name IN ('user', 'account', 'session', 'verificationToken', 'userApiKey', 'commonbase', 'embeddings')
+ORDER BY table_name;
+```
+
+You should see 7 tables listed.
 
 ### Update GitHub OAuth App
 After deployment, update your GitHub OAuth application:
