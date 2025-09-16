@@ -6,15 +6,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { addToCart, isInCart } from '@/lib/cart';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, ChevronDown, Database } from 'lucide-react';
 import { extractUrls, fetchUrlTitle } from '@/lib/url-utils';
 import { DemoModeCallout } from '@/components/demo-mode-callout';
 import { SimilarityScatterPlot } from '@/components/similarity-scatter-plot';
 import YouTube from 'react-youtube';
 import { extractYouTubeVideoId, isYouTubeUrl } from '@/lib/youtube-utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface Entry {
   id: string;
@@ -555,7 +558,20 @@ export default function EntryPage() {
               />
             ) : (
               <div className="prose max-w-none">
-                <p className="whitespace-pre-wrap">{entry.data}</p>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    // Ensure links open in new tab
+                    a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                    // Custom styling for code blocks
+                    code: ({ node, inline, ...props }) =>
+                      inline ?
+                        <code {...props} className="bg-gray-100 px-1 py-0.5 rounded text-sm" /> :
+                        <code {...props} className="block bg-gray-100 p-2 rounded text-sm" />
+                  }}
+                >
+                  {entry.data}
+                </ReactMarkdown>
               </div>
             )}
             
@@ -564,6 +580,31 @@ export default function EntryPage() {
               <div>Updated: {new Date(entry.updated).toLocaleString()}</div>
               {entry.metadata?.type && (
                 <div>Type: {entry.metadata.type}</div>
+              )}
+
+              {/* Metadata dropdown */}
+              {entry.metadata && Object.keys(entry.metadata).length > 0 && (
+                <div className="pt-2">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm" className="h-8">
+                        <Database className="w-4 h-4 mr-2" />
+                        View Metadata
+                        <ChevronDown className="w-4 h-4 ml-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-80 max-h-60 overflow-y-auto">
+                      {Object.entries(entry.metadata).map(([key, value]) => (
+                        <DropdownMenuItem key={key} className="flex flex-col items-start p-3 focus:bg-gray-50">
+                          <div className="font-medium text-gray-900 mb-1">{key}</div>
+                          <div className="text-sm text-gray-600 break-all max-w-full">
+                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               )}
             </div>
           </div>
@@ -750,7 +791,20 @@ export default function EntryPage() {
                         />
                       </div>
                     )}
-                    <div className="text-sm whitespace-pre-wrap">{comment.data}</div>
+                    <div className="text-sm prose prose-sm max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                          code: ({ node, inline, ...props }) =>
+                            inline ?
+                              <code {...props} className="bg-gray-200 px-1 py-0.5 rounded text-xs" /> :
+                              <code {...props} className="block bg-gray-200 p-2 rounded text-xs" />
+                        }}
+                      >
+                        {comment.data}
+                      </ReactMarkdown>
+                    </div>
                     <div className="text-xs text-gray-500 mt-1">
                       {new Date(comment.created).toLocaleString()}
                     </div>
