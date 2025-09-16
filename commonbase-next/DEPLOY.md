@@ -6,7 +6,9 @@ Deploy your team's private Commonbase instance with authentication and database 
 
 ### 1. Deploy to Vercel (Recommended)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-username%2Fcommonbase-next&env=NEXTAUTH_SECRET,GITHUB_ID,GITHUB_SECRET,API_KEY,OPENAI_API_KEY&envDescription=Required%20environment%20variables%20for%20authentication%20and%20API%20access&project-name=team-commonbase&repository-name=team-commonbase)
+
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyour-commonbase%2Fcommonbase%2Ftree%2Fauth%2Fcommonbase-next&env=NEXTAUTH_SECRET,GITHUB_ID,GITHUB_SECRET,API_KEY,OPENAI_API_KEY&envDescription=Required%20environment%20variables%20for%20authentication%20and%20API%20access&project-name=team-commonbase&repository-name=team-commonbase)
 
 ### 2. Deploy to Railway
 *Coming soon*

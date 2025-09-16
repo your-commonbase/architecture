@@ -5,7 +5,7 @@ import { deleteUserApiKey } from '@/lib/api-keys'
 // DELETE - Delete a user's API key
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAuthEnabled()) {
     return NextResponse.json({ error: 'Authentication not enabled' }, { status: 404 })
@@ -19,7 +19,8 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const keyId = params.id
+    const resolvedParams = await params
+    const keyId = resolvedParams.id
     if (!keyId) {
       return NextResponse.json({ error: 'Key ID is required' }, { status: 400 })
     }

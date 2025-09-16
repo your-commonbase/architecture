@@ -161,11 +161,13 @@ export async function POST(request: NextRequest) {
         const [newEntry] = await db.insert(commonbase).values(entryValues).returning({ id: commonbase.id });
         const finalEntryId = newEntry.id;
 
-        // Insert embedding
-        await db.insert(embeddings).values({
-          id: finalEntryId,
-          embedding: embeddingArray,
-        });
+        // Insert embedding (only if we have a valid array)
+        if (embeddingArray && Array.isArray(embeddingArray)) {
+          await db.insert(embeddings).values({
+            id: finalEntryId,
+            embedding: embeddingArray,
+          });
+        }
 
         // Handle optional link field (create bidirectional links)
         if (row.link) {
@@ -178,7 +180,7 @@ export async function POST(request: NextRequest) {
 
             if (parentEntry) {
               // Update new entry to link to parent
-              const currentLinks = metadata.links || [];
+              const currentLinks = (metadata as any).links || [];
               if (!currentLinks.includes(row.link)) {
                 await db
                   .update(commonbase)

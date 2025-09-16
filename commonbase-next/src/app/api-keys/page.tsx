@@ -17,7 +17,7 @@ interface ApiKey {
 }
 
 export default function ApiKeysPage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
   const [newKeyName, setNewKeyName] = useState('')
   const [generatedKey, setGeneratedKey] = useState<string | null>(null)
@@ -32,12 +32,14 @@ export default function ApiKeysPage() {
 
   useEffect(() => {
     if (!isAuthEnabled) return
+    if (status === 'loading') return
+
     if (session) {
       fetchApiKeys()
-    } else if (session === null) {
+    } else {
       setLoading(false)
     }
-  }, [session, isAuthEnabled])
+  }, [session, status, isAuthEnabled])
 
   const fetchApiKeys = async () => {
     try {
@@ -146,7 +148,7 @@ export default function ApiKeysPage() {
     )
   }
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto">

@@ -6,7 +6,7 @@ import { validateUserApiKey } from '@/lib/api-keys'
 export async function validateApiRequest(request: NextRequest): Promise<{
   isValid: boolean,
   error?: string,
-  user?: any
+  user?: { id: string; name?: string; email?: string }
 }> {
   // If auth is not enabled (local development), allow all requests
   if (!isAuthEnabled()) {
