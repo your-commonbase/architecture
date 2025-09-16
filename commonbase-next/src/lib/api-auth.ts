@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getAuth, isAuthEnabled } from '@/lib/auth'
+import { auth, isAuthEnabled } from '@/lib/auth'
 import { validateUserApiKey } from '@/lib/api-keys'
 
 // Check if API request is authenticated
@@ -41,7 +41,6 @@ export async function validateApiRequest(request: NextRequest): Promise<{
 
   // Check for valid session (for web app requests)
   try {
-    const { auth } = await getAuth()
     const session = await auth()
     if (session?.user) {
       return { isValid: true, user: session.user }

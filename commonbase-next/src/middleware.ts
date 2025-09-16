@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuth, isAuthEnabled } from '@/lib/auth'
+import { auth, isAuthEnabled } from '@/lib/auth'
 
 export default async function middleware(request: NextRequest) {
   // Skip all middleware if auth is not enabled (local development)
@@ -13,9 +13,6 @@ export default async function middleware(request: NextRequest) {
   if (pathname.startsWith('/api/auth/')) {
     return NextResponse.next()
   }
-
-  // Get auth instance
-  const { auth } = await getAuth()
 
   // Protect API routes
   if (pathname.startsWith('/api/')) {

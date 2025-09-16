@@ -1,4 +1,4 @@
-import { getAuth, isAuthEnabled } from '@/lib/auth'
+import { handlers, isAuthEnabled } from '@/lib/auth'
 import { NextResponse } from 'next/server'
 
 export const GET = async (req: Request) => {
@@ -6,8 +6,11 @@ export const GET = async (req: Request) => {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const { handlers } = await getAuth()
-  return handlers.GET!(req)
+  if (!handlers.GET) {
+    return NextResponse.json({ error: 'Authentication not properly configured' }, { status: 500 })
+  }
+
+  return handlers.GET(req)
 }
 
 export const POST = async (req: Request) => {
@@ -15,6 +18,9 @@ export const POST = async (req: Request) => {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const { handlers } = await getAuth()
-  return handlers.POST!(req)
+  if (!handlers.POST) {
+    return NextResponse.json({ error: 'Authentication not properly configured' }, { status: 500 })
+  }
+
+  return handlers.POST(req)
 }
