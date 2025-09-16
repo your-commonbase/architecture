@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getSession, isAuthEnabled } from '@/lib/simple-auth'
+import { auth, isAuthEnabled } from '@/auth'
 import { validateUserApiKey } from '@/lib/api-keys'
 
 // Check if API request is authenticated
@@ -41,9 +41,9 @@ export async function validateApiRequest(request: NextRequest): Promise<{
 
   // Check for valid session (for web app requests)
   try {
-    const user = await getSession(request)
-    if (user) {
-      return { isValid: true, user }
+    const session = await auth()
+    if (session?.user) {
+      return { isValid: true, user: session.user }
     }
   } catch (error) {
     console.error('Session validation error:', error)

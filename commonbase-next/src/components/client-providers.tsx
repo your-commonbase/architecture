@@ -5,9 +5,7 @@ import { SessionProvider } from 'next-auth/react';
 
 // Check if auth is enabled on client side
 const isAuthEnabled = () => {
-  // For now, disable SessionProvider entirely to avoid API calls
-  // until NextAuth is working properly
-  return false
+  return typeof window !== 'undefined' && process.env.NODE_ENV === 'production'
 }
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {

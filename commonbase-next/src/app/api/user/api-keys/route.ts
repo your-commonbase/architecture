@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSession, isAuthEnabled } from '@/lib/simple-auth'
+import { auth, isAuthEnabled } from '@/auth'
 import { createUserApiKey, getUserApiKeys } from '@/lib/api-keys'
 
 // GET - List user's API keys
@@ -9,13 +9,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const user = await getSession(request)
+    const session = await auth()
 
-    if (!user?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const apiKeys = await getUserApiKeys(user.id)
+    const apiKeys = await getUserApiKeys(session.user.id)
     return NextResponse.json({ apiKeys })
   } catch (error) {
     console.error('Error fetching API keys:', error)
@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const user = await getSession(request)
+    const session = await auth()
 
-    if (!user?.id) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await createUserApiKey(user.id, name.trim())
+    const result = await createUserApiKey(session.user.id, name.trim())
 
     return NextResponse.json({
       id: result.id,
