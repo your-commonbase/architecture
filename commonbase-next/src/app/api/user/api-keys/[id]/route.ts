@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthInstance, isAuthEnabled } from '@/lib/auth'
+import { getSession, isAuthEnabled } from '@/lib/simple-auth'
 import { deleteUserApiKey } from '@/lib/api-keys'
 
 // DELETE - Delete a user's API key
@@ -12,10 +12,9 @@ export async function DELETE(
   }
 
   try {
-    const authInstance = await getAuthInstance()
-    const session = await authInstance.auth()
+    const user = await getSession(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -25,7 +24,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Key ID is required' }, { status: 400 })
     }
 
-    const deleted = await deleteUserApiKey(session.user.id, keyId)
+    const deleted = await deleteUserApiKey(user.id, keyId)
 
     if (!deleted) {
       return NextResponse.json({ error: 'API key not found' }, { status: 404 })
