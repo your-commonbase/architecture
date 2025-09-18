@@ -1,11 +1,62 @@
-# Architecture of a Commonbase
+# Commonbase
 
-**Want to just run a Commonbase of your own? Get started with [Commonbase Next](https://github.com/your-commonbase/commonbase/tree/main/commonbase-next/README.md)**
+***A Simple Ledger with Complex Associations***
+
+## 1. Features
+
+<details>
+  <summary>
+    Store into your Commonbase
+  </summary>
+  
+  - Add text
+  - Add images
+  - Add CSVs
+  - Add web search queries
+  - API Endpoint (/add)
+</details>
+
+<details>
+  <summary>
+    Search your Commonbase
+  </summary>
+
+  - Semantic Search
+  - Full Text Search
+  - Ledger View
+  - Graph View
+  - Feed View
+  - APIs Endpoints (/search and /random)
+</details>
+
+<details>
+  <summary>
+    Synthesize Entries in your Commonbase
+  </summary>
+
+  - Link entries together with join
+  - Comment on entries
+  - LLM reasoning
+  - Cart View
+</details>
+
+<details>
+  <summary>
+    Share entries from your Commonbase
+  </summary>
+
+  - Cart View
+  - Copy to Clipboard
+</details>
+
+## 2. Run a Local Commonbase
+
+**Get started with [Commonbase Next](https://github.com/your-commonbase/commonbase/tree/main/commonbase-next/README.md)**
 
 <img width="3308" height="3528" alt="screencapture-localhost-3000-2025-09-14-11_25_58" src="https://github.com/user-attachments/assets/669b015e-a33c-40d5-9fcf-01a0c32ea4d6" />
 
 
-## Intro
+## 3. Architecture (Intro)
 
 **A Commonbase is a core data structure for [Personal Library Science](https://www.bramadams.dev/issue-54/).**
 
