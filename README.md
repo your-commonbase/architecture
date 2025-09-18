@@ -27,6 +27,14 @@
   - Graph View
   - Feed View
   - APIs Endpoints (/search and /random)
+
+*Semantic Search and FTS*
+<img width="3308" height="2442" alt="screencapture-localhost-3000-search-2025-09-14-11_27_25" src="https://github.com/user-attachments/assets/a402c395-2951-4964-b65e-05aca58976a3" />
+
+*Ledger*
+<img width="3308" height="3026" alt="screencapture-localhost-3000-ledger-2025-09-14-11_26_24" src="https://github.com/user-attachments/assets/602fb6d6-0fee-4387-ad23-ef58d0855b37" />
+
+
 </details>
 
 <details>
